@@ -33,8 +33,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 import openreview
 from loguru import logger
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) -> dict[str, Any]:

@@ -30,8 +30,9 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. OpenAI APIキーを設定
-export OPENAI_API_KEY="your-api-key-here"
+# 3. OpenAI APIキーを設定（.envファイル）
+cp .env.example .env
+# .env ファイルを編集して実際のAPIキーを設定してください
 
 # 4. 論文データを取得（初回のみ、60-90分）
 python fetch_all_papers.py --venue NeurIPS --year 2025
@@ -87,6 +88,23 @@ pip install -r requirements.txt
 
 #### 4. 環境変数の設定
 
+**推奨: .envファイルを使用**
+
+```bash
+# .env.example をコピーして .env ファイルを作成
+cp .env.example .env
+
+# .env ファイルを編集して実際のAPIキーを設定
+# エディタで .env を開いて以下のように編集:
+# OPENAI_API_KEY=sk-your-actual-api-key-here
+```
+
+`.env` ファイルは `.gitignore` に含まれているため、誤ってGitにコミットされることはありません。
+
+**代替方法: 環境変数として直接設定**
+
+一時的なテストなどでは、環境変数を直接設定することもできます：
+
 ```bash
 # macOS/Linux
 export OPENAI_API_KEY="your-api-key-here"
@@ -98,7 +116,7 @@ set OPENAI_API_KEY=your-api-key-here
 $env:OPENAI_API_KEY="your-api-key-here"
 ```
 
-永続的に設定する場合は、`.bashrc`、`.zshrc`、またはシステム環境変数に追加してください。
+**注意**: この方法では、ターミナルを閉じると設定が失われます。
 
 #### 5. 論文データの取得
 

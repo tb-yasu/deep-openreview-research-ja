@@ -9,7 +9,11 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from loguru import logger
+
+# Load environment variables from .env file
+load_dotenv()
 
 from app.paper_review_workflow.agent import create_graph, invoke_graph
 from app.paper_review_workflow.models.state import (
