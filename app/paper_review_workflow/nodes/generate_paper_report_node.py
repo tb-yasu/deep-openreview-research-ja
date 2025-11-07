@@ -178,6 +178,21 @@ class GeneratePaperReportNode:
                 lines.append(f"| OpenReview評価 | {rating_avg:.2f}/10 |")
             lines.append("")
             
+            # 採択判定と発表形式
+            decision = paper.get('decision') if isinstance(paper, dict) else getattr(paper, 'decision', None)
+            if decision and decision != "N/A":
+                lines.append(f"**採択判定**: {decision}")
+                
+                # 発表形式を抽出（NeurIPSなどの場合）
+                decision_lower = decision.lower()
+                if "oral" in decision_lower:
+                    lines.append("  - 🎤 **発表形式**: Oral Presentation（口頭発表）")
+                elif "spotlight" in decision_lower:
+                    lines.append("  - ✨ **発表形式**: Spotlight Presentation")
+                elif "poster" in decision_lower:
+                    lines.append("  - 📊 **発表形式**: Poster Presentation")
+                lines.append("")
+            
             # 著者
             authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
             if authors:

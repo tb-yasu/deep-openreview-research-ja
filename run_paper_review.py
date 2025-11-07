@@ -363,6 +363,16 @@ def run_paper_review(args: argparse.Namespace) -> None:
                         decision = paper.get('decision', 'N/A')
                         logger.info(f"この論文は{review_count}件のレビューを受け、{rating_info}の評価を獲得しました。")
                         logger.info(f"採択判定は「{decision}」です。")
+                        
+                        # 発表形式を表示（NeurIPSなどの場合）
+                        if decision and decision != 'N/A':
+                            decision_lower = decision.lower()
+                            if "oral" in decision_lower:
+                                logger.info("  └ 🎤 発表形式: Oral Presentation（口頭発表）")
+                            elif "spotlight" in decision_lower:
+                                logger.info("  └ ✨ 発表形式: Spotlight Presentation")
+                            elif "poster" in decision_lower:
+                                logger.info("  └ 📊 発表形式: Poster Presentation")
                     logger.info("")
                     
                     # AI評価
