@@ -74,7 +74,7 @@ python run_paper_review.py \
 python run_paper_review.py \
   --venue NeurIPS \
   --year 2025 \
-  --research-description "量子コンピューティングとLLMへの応用に興味があります"
+  --research-description "TensorNetworkに強い興味があります。その応用にも興味があります。"
 
 # 例2: キーワードリストで指定
 python run_paper_review.py \
