@@ -1,32 +1,36 @@
 [project]
-name = "wandb-fc-2025-agent-workshop"
-version = "0.1.0"
-description = "W&B Fully Connected Tokyo 2025 - 現場で活用するためのAIエージェントワークショップ"
+name = "openreview-agent-ja"
+version = "1.0.0"
+description = "AIを活用した論文レビュー・分析エージェント（日本語ドキュメント） / AI-powered paper review and analysis agent with Japanese documentation"
 readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+    {name = "Yasu", email = "your-email@example.com"}
+]
+license = {text = "MIT"}
+keywords = ["openreview", "paper-review", "ai-agent", "research", "llm", "langgraph"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
-    "feedparser>=6.0.12",
-    "ipdb>=0.13.13",
     "jinja2>=3.1.6",
-    "jsonschema>=4.25.1",
     "langchain>=1.0.0",
     "langchain-openai>=0.2.0",
-    "langchain-anthropic>=0.3.0",
     "langgraph>=0.3.11",
-    "langgraph-cli[inmem]>=0.4.2",
     "loguru>=0.7.3",
     "nanoid>=2.0.0",
     "openai>=1.66.3",
     "openreview-py>=1.40.0",
-    "perplexityai>=0.13.0",
-    "pillow>=11.1.0",
     "pydantic>=2.10.6",
-    "pydantic-settings>=2.11.0",
     "python-dotenv>=1.0.1",
-    "python-ulid>=3.1.0",
     "requests>=2.32.0",
     "tenacity>=9.1.2",
-    "weave>=0.52.8",
 ]
 
 [project.optional-dependencies]
@@ -70,9 +74,6 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true
-
-[tool.uv.sources]
-app = { workspace = true }
 
 [tool.pyright]
 include = ["app"]

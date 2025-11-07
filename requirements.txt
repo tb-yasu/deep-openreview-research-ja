@@ -1,33 +1,18 @@
-feedparser>=6.0.12
-ipdb>=0.13.13
+# OpenReview Agent - Core Dependencies
 jinja2>=3.1.6
-jsonschema>=4.25.1
 langchain>=1.0.0
-langchain-community>=0.3.30
-langchain-openai>=0.3.33
-langgraph==1.0.1
-langgraph-cli[inmem]>=0.4.2
+langchain-openai>=0.2.0
+langgraph>=0.3.11
 loguru>=0.7.3
 nanoid>=2.0.0
 openai>=1.66.3
-perplexityai>=0.13.0
-pillow>=11.1.0
+openreview-py>=1.40.0
 pydantic>=2.10.6
-pydantic-settings>=2.11.0
 python-dotenv>=1.0.1
-python-ulid>=3.1.0
-# tenacity version constraint for compatibility with google-adk 1.17.0
-tenacity>=8.0.0,<9.0.0
-weave>=0.52.8
+requests>=2.32.0
+tenacity>=9.1.2
 
-# Known dependency conflict notes:
-# - If using protobuf, be aware of conflicting requirements between google-ai-generativelanguage, grpcio-status, tensorflow (need protobuf <6.0), and other packages that may require protobuf>=6.x.
-# - requests version pin may be needed if using google-colab (requests==2.32.4).
-
-# Development dependencies
+# Development dependencies (optional)
 ruff>=0.7.2
 mypy>=1.13.0
 typing-extensions>=4.9.0
-pytest>=8.3.4
-httpx>=0.28.0
-pandas-stubs>=2.2.0
