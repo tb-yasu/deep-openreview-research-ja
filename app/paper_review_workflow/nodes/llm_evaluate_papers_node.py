@@ -128,6 +128,9 @@ class LLMEvaluatePapersNode:
     def _create_evaluation_prompt(self, paper: EvaluatedPaper, criteria) -> str:
         """評価用プロンプトを作成."""
         research_interests_str = ", ".join(criteria.research_interests)
+        
+        # research_description がない場合は research_interests をフォールバック
+        user_interests = criteria.research_description or f"キーワード: {research_interests_str}"
 
         prompt = f"""
             以下の論文を評価してください。
@@ -144,7 +147,7 @@ OpenReview評価 (参考): {paper.rating_avg if paper.rating_avg else 'N/A'}/10
 以下の情報をタイトルとアブストラクトとキーワードとOpenReview評価を読み判断してください。
 
 # ユーザーの研究興味
-{criteria.research_description}
+{user_interests}
 
 # 評価基準 (0.0〜1.0の実数値で評価)
 1. 関連性 (Relevance)

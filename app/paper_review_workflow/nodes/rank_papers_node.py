@@ -220,10 +220,14 @@ class RankPapersNode:
         )
         keywords_str = ", ".join(paper.keywords[:MAX_KEYWORDS_DISPLAY])
         
+        # research_description がない場合は research_interests をフォールバック
+        research_interests_str = ", ".join(criteria.research_interests)
+        user_interests = criteria.research_description or f"Keywords: {research_interests_str}"
+        
         prompt = f"""Rate the relevance of this paper to the user's research interests.
 
 User's Research Interests:
-{criteria.research_description}
+{user_interests}
 
 Paper:
 Title: {paper.title}
