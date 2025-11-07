@@ -18,7 +18,7 @@
 ```bash
 # リポジトリをクローン
 git clone <repository-url>
-cd wandb-fc-2025-agent-workshop
+cd openreview-agent-ja
 
 # 仮想環境を作成
 python -m venv venv
@@ -39,7 +39,7 @@ export OPENAI_API_KEY="your-api-key-here"
 python run_paper_review.py \
   --venue NeurIPS \
   --year 2025 \
-  --research-description "グラフ生成と創薬への応用に興味があります"
+  --research-description "グラフ生成と創薬への応用に興味があります。"
 ```
 
 ### 2. キーワードリストで指定
@@ -66,13 +66,13 @@ python run_paper_review.py \
 **方法1: 自然言語（推奨）**
 
 ```bash
---research-description "量子コンピューティングとLLMへの応用に興味があります"
+--research-description "私はgraph generationに強い興味があります。その創薬への応用に興味があります。"
 ```
 
 **方法2: キーワードリスト**
 
 ```bash
---research-interests "quantum computing,LLM,machine learning"
+--research-interests "LLM,its application, machine learning"
 ```
 
 ### 評価基準のオプション
@@ -125,7 +125,7 @@ python run_paper_review.py \
 python run_paper_review.py \
   --venue NeurIPS \
   --year 2025 \
-  --research-description "量子コンピューティングとLLMへの応用" \
+  --research-description "グラフ生成と創薬への応用に興味があります。" \
   --top-k 50 \
   --min-relevance-score 0.3 \
   --model gpt-4o
