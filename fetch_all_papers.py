@@ -232,7 +232,6 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
             logger.info(f"Fetching submissions (attempt {attempt + 1}/{max_retries})...")
             submissions = client.get_all_notes(
                 invitation=f"{venue_id}/-/Submission",
-                details="replies",
             )
             logger.success(f"Successfully fetched {len(submissions)} submissions")
             break
@@ -353,6 +352,10 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
             "rating_avg": review_data["rating_avg"],
             "confidence_avg": review_data["confidence_avg"],
             "decision": review_data["decision"],
+            # Additional OpenReview information
+            "meta_review": review_data["meta_review"],
+            "author_remarks": review_data["author_remarks"],
+            "decision_comment": review_data["decision_comment"],
         }
         papers.append(paper_info)
         
