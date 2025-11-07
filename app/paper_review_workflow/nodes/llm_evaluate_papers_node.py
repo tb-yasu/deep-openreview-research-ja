@@ -5,7 +5,6 @@ import re
 from typing import Any
 
 from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from loguru import logger
 
 from app.paper_review_workflow.models.state import (
@@ -59,15 +58,8 @@ class LLMEvaluatePapersNode:
                 max_tokens=self.llm_config.max_tokens,
                 timeout=self.llm_config.timeout,
             )
-        elif model_name.startswith("claude"):
-            return ChatAnthropic(
-                model=model_name,
-                temperature=self.llm_config.temperature,
-                max_tokens=self.llm_config.max_tokens,
-                timeout=self.llm_config.timeout,
-            )
         else:
-            raise ValueError(f"Unsupported model: {model_name}")
+            raise ValueError(f"Unsupported model: {model_name}. Only OpenAI GPT models are supported.")
     
     def __call__(self, state: PaperReviewAgentState) -> dict[str, Any]:
         """LLM評価を実行.

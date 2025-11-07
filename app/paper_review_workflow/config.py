@@ -6,13 +6,11 @@ from typing import Optional
 
 
 class LLMModel(str, Enum):
-    """サポートされるLLMモデル."""
+    """サポートされるLLMモデル (OpenAI GPT models only)."""
     
     GPT4O_MINI = "gpt-4o-mini"
     GPT4O = "gpt-4o"
     GPT4_TURBO = "gpt-4-turbo"
-    CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
-    CLAUDE_HAIKU = "claude-3-5-haiku-20241022"
 
 
 class LLMConfig:
