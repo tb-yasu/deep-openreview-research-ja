@@ -1,0 +1,81 @@
+[project]
+name = "wandb-fc-2025-agent-workshop"
+version = "0.1.0"
+description = "W&B Fully Connected Tokyo 2025 - 現場で活用するためのAIエージェントワークショップ"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "feedparser>=6.0.12",
+    "ipdb>=0.13.13",
+    "jinja2>=3.1.6",
+    "jsonschema>=4.25.1",
+    "langchain>=1.0.0",
+    "langchain-openai>=0.2.0",
+    "langchain-anthropic>=0.3.0",
+    "langgraph>=0.3.11",
+    "langgraph-cli[inmem]>=0.4.2",
+    "loguru>=0.7.3",
+    "nanoid>=2.0.0",
+    "openai>=1.66.3",
+    "openreview-py>=1.40.0",
+    "perplexityai>=0.13.0",
+    "pillow>=11.1.0",
+    "pydantic>=2.10.6",
+    "pydantic-settings>=2.11.0",
+    "python-dotenv>=1.0.1",
+    "python-ulid>=3.1.0",
+    "requests>=2.32.0",
+    "tenacity>=9.1.2",
+    "weave>=0.52.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.7.2",
+    "mypy>=1.13.0",
+    "typing-extensions>=4.9.0",
+    "pytest>=8.3.4",
+    "httpx>=0.28.0",
+    "pandas-stubs>=2.2.0",
+]
+
+[tool.mypy]
+mypy_path = "app"
+plugins = "pydantic.mypy"
+python_version = "3.13"
+check_untyped_defs = true
+disallow_any_explicit = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+explicit_package_bases = true
+ignore_missing_imports = true
+namespace_packages = true
+no_implicit_optional = true
+show_error_context = true
+show_column_numbers = true
+strict_optional = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+exclude = [
+    "^setup.py$",
+]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+[tool.uv.sources]
+app = { workspace = true }
+
+[tool.pyright]
+include = ["app"]
+exclude = ["**/__pycache__"]
+reportMissingImports = false
+reportMissingTypeStubs = false

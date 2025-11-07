@@ -1,0 +1,231 @@
+"""Node for generating paper review report."""
+
+from typing import Any
+from datetime import datetime
+
+from loguru import logger
+
+from app.paper_review_workflow.models.state import PaperReviewAgentState
+
+
+class GeneratePaperReportNode:
+    """論文レビューレポートを生成するノード."""
+    
+    def __init__(self) -> None:
+        """GeneratePaperReportNodeを初期化."""
+        pass
+    
+    def __call__(self, state: PaperReviewAgentState) -> dict[str, Any]:
+        """レポート生成を実行.
+        
+        Args:
+        ----
+            state: 現在の状態
+            
+        Returns:
+        -------
+            更新された状態の辞書
+        """
+        logger.info("Generating paper review report...")
+        
+        report = self._generate_markdown_report(state)
+        
+        logger.success("Paper review report generated successfully")
+        
+        return {
+            "paper_report": report,
+        }
+    
+    def _generate_markdown_report(self, state: PaperReviewAgentState) -> str:
+        """Markdownレポートを生成.
+        
+        Args:
+        ----
+            state: 現在の状態
+            
+        Returns:
+        -------
+            Markdown形式のレポート
+        """
+        lines = []
+        
+        # タイトル
+        lines.append("# 論文レビューレポート")
+        lines.append("")
+        lines.append(f"**生成日時**: {datetime.now().strftime('%Y年%m月%d日 %H:%M')}")
+        lines.append("")
+        
+        # 検索条件
+        lines.append("## 検索条件")
+        lines.append("")
+        lines.append(f"- **学会**: {state.venue} {state.year}")
+        lines.append(f"- **キーワード**: {state.keywords or '指定なし'}")
+        lines.append(f"- **検索論文数**: {len(state.papers)}件")
+        lines.append(f"- **評価論文数**: {len(state.evaluated_papers)}件")
+        lines.append(f"- **ランク対象論文数**: {len(state.ranked_papers)}件")
+        lines.append("")
+        
+        # 評価基準
+        criteria = state.evaluation_criteria
+        lines.append("## 評価基準")
+        lines.append("")
+        lines.append(f"- **研究興味**: {', '.join(criteria.research_interests)}")
+        lines.append(f"- **最小関連性スコア**: {criteria.min_relevance_score}")
+        if criteria.min_rating:
+            lines.append(f"- **最小レビュー評価**: {criteria.min_rating}/10")
+        lines.append(f"- **新規性重視**: {'はい' if criteria.focus_on_novelty else 'いいえ'}")
+        lines.append(f"- **インパクト重視**: {'はい' if criteria.focus_on_impact else 'いいえ'}")
+        lines.append("")
+        
+        # キーワードと同義語
+        if state.synonyms:
+            lines.append("## キーワードと同義語")
+            lines.append("")
+            lines.append("各キーワードに対してLLMが生成した同義語を使用して論文を検索しました。")
+            lines.append("")
+            for keyword, syns in state.synonyms.items():
+                lines.append(f"### {keyword}")
+                lines.append("")
+                if syns:
+                    lines.append("**同義語**:")
+                    for syn in syns:
+                        lines.append(f"- {syn}")
+                else:
+                    lines.append("同義語なし（元のキーワードのみ使用）")
+                lines.append("")
+        
+        # 統計情報
+        if state.ranked_papers:
+            scores = [p.overall_score for p in state.ranked_papers if p.overall_score]
+            ratings = [p.rating_avg for p in state.ranked_papers if p.rating_avg]
+            
+            lines.append("## 統計情報")
+            lines.append("")
+            if scores:
+                lines.append(f"- **平均総合スコア**: {sum(scores) / len(scores):.3f}")
+                lines.append(f"- **最高スコア**: {max(scores):.3f}")
+                lines.append(f"- **最低スコア**: {min(scores):.3f}")
+            if ratings:
+                lines.append(f"- **平均レビュー評価**: {sum(ratings) / len(ratings):.2f}/10")
+            lines.append("")
+        
+        # トップ論文（LLM評価後はtop_papersから、なければranked_papersから）
+        lines.append("## トップ論文")
+        lines.append("")
+        
+        # top_papersがあればそれを使用（LLM評価済み）、なければranked_papersを使用
+        papers_to_display = state.top_papers if state.top_papers else state.ranked_papers[:10]
+        
+        for i, paper_data in enumerate(papers_to_display[:20], 1):  # 上位20件
+            # paper_dataが辞書の場合とEvaluatedPaperオブジェクトの場合を処理
+            if isinstance(paper_data, dict):
+                paper = paper_data
+                rank = paper.get('rank', i)
+            else:
+                paper = paper_data
+                rank = getattr(paper, 'rank', i)
+            
+            # タイトルを取得（辞書とオブジェクト両対応）
+            title = paper.get('title') if isinstance(paper, dict) else paper.title
+            lines.append(f"### {rank}. {title}")
+            lines.append("")
+            
+            # スコア表示
+            lines.append("#### スコア")
+            lines.append("")
+            lines.append(f"| 項目 | スコア |")
+            lines.append(f"|------|--------|")
+            
+            # 最終スコア（LLM評価後）
+            final_score = paper.get('final_score') if isinstance(paper, dict) else getattr(paper, 'final_score', None)
+            if final_score is not None:
+                lines.append(f"| **最終スコア** | **{final_score:.3f}** |")
+            
+            # OpenReview総合スコア
+            overall_score = paper.get('overall_score') if isinstance(paper, dict) else getattr(paper, 'overall_score', None)
+            if overall_score is not None:
+                lines.append(f"| OpenReview総合 | {overall_score:.3f} |")
+            
+            # OpenReview詳細スコア
+            relevance_score = paper.get('relevance_score') if isinstance(paper, dict) else getattr(paper, 'relevance_score', None)
+            if relevance_score is not None:
+                lines.append(f"| 　├ 関連性 | {relevance_score:.3f} |")
+            
+            novelty_score = paper.get('novelty_score') if isinstance(paper, dict) else getattr(paper, 'novelty_score', None)
+            if novelty_score is not None:
+                lines.append(f"| 　├ 新規性 | {novelty_score:.3f} |")
+            
+            impact_score = paper.get('impact_score') if isinstance(paper, dict) else getattr(paper, 'impact_score', None)
+            if impact_score is not None:
+                lines.append(f"| 　└ インパクト | {impact_score:.3f} |")
+            
+            # LLMスコア
+            llm_relevance = paper.get('llm_relevance_score') if isinstance(paper, dict) else getattr(paper, 'llm_relevance_score', None)
+            llm_novelty = paper.get('llm_novelty_score') if isinstance(paper, dict) else getattr(paper, 'llm_novelty_score', None)
+            llm_practical = paper.get('llm_practical_score') if isinstance(paper, dict) else getattr(paper, 'llm_practical_score', None)
+            
+            if any([llm_relevance is not None, llm_novelty is not None, llm_practical is not None]):
+                if llm_relevance is not None:
+                    lines.append(f"| AI評価（関連性） | {llm_relevance:.3f} |")
+                if llm_novelty is not None:
+                    lines.append(f"| AI評価（新規性） | {llm_novelty:.3f} |")
+                if llm_practical is not None:
+                    lines.append(f"| AI評価（実用性） | {llm_practical:.3f} |")
+            
+            # OpenReview平均評価
+            rating_avg = paper.get('rating_avg') if isinstance(paper, dict) else getattr(paper, 'rating_avg', None)
+            if rating_avg is not None:
+                lines.append(f"| OpenReview評価 | {rating_avg:.2f}/10 |")
+            lines.append("")
+            
+            # 著者
+            authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
+            if authors:
+                authors_display = ", ".join(authors[:5])
+                if len(authors) > 5:
+                    authors_display += f" 他{len(authors) - 5}名"
+                lines.append(f"**著者**: {authors_display}")
+                lines.append("")
+            
+            # キーワード
+            keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
+            if keywords:
+                lines.append(f"**キーワード**: {', '.join(keywords[:8])}")
+                lines.append("")
+            
+            # アブストラクト（全文表示、セクションとして独立）
+            abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
+            if abstract and abstract.strip():
+                lines.append("#### 概要")
+                lines.append("")
+                lines.append(abstract)
+                lines.append("")
+            
+            # OpenReview評価理由
+            evaluation_rationale = paper.get('evaluation_rationale') if isinstance(paper, dict) else getattr(paper, 'evaluation_rationale', None)
+            if evaluation_rationale:
+                lines.append("#### OpenReview評価")
+                lines.append("")
+                lines.append(evaluation_rationale)
+                lines.append("")
+            
+            # LLM評価理由
+            llm_rationale = paper.get('llm_rationale') if isinstance(paper, dict) else getattr(paper, 'llm_rationale', None)
+            if llm_rationale:
+                lines.append("#### AI評価（内容分析）")
+                lines.append("")
+                lines.append(llm_rationale)
+                lines.append("")
+            
+            # リンク
+            forum_url = paper.get('forum_url') if isinstance(paper, dict) else paper.forum_url
+            pdf_url = paper.get('pdf_url') if isinstance(paper, dict) else paper.pdf_url
+            lines.append(f"**🔗 リンク**:")
+            lines.append(f"- [OpenReview]({forum_url})")
+            lines.append(f"- [PDF]({pdf_url})")
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+        
+        return "\n".join(lines)
+
