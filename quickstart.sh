@@ -12,16 +12,16 @@ echo ""
 if [ -z "$OPENAI_API_KEY" ]; then
     # .env ファイルの存在を確認
     if [ ! -f ".env" ]; then
-        echo "❌ エラー: OPENAI_API_KEY が設定されていません"
-        echo ""
+    echo "❌ エラー: OPENAI_API_KEY が設定されていません"
+    echo ""
         echo "方法1: .env ファイルを作成（推奨）"
         echo "  cp .env.example .env"
         echo "  # .env ファイルを編集してAPIキーを設定"
         echo ""
         echo "方法2: 環境変数として設定"
-        echo "  export OPENAI_API_KEY='your-api-key-here'"
-        echo ""
-        exit 1
+    echo "  export OPENAI_API_KEY='your-api-key-here'"
+    echo ""
+    exit 1
     else
         echo "ℹ️  .env ファイルが見つかりました"
         echo "   Pythonスクリプトが自動的に読み込みます"

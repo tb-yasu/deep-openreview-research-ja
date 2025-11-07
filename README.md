@@ -136,7 +136,7 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 python run_paper_review.py \
   --venue NeurIPS \
   --year 2025 \
-  --research-description "グラフ生成と創薬への応用に興味があります"
+  --research-description "グラフ生成に強い興味があります。関連して創薬への応用に興味があります"
 ```
 
 ### パターン2: キーワードリストで指定
@@ -215,7 +215,7 @@ python run_paper_review.py \
 python run_paper_review.py \
   --venue NeurIPS \
   --year 2025 \
-  --research-description "量子コンピューティングとLLMへの応用" \
+  --research-description "強化学習とその応用に興味があります。" \
   --top-k 50 \
   --min-relevance-score 0.3 \
   --model gpt-4o
