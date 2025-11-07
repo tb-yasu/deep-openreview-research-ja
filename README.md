@@ -1,10 +1,10 @@
-# Paper Review Agent
+# openreview-agent-ja
 
-AIを活用した論文レビュー・分析エージェント
+OpenReview論文を自動で発見・分析する日本語対応AIエージェント
 
 ## 📋 概要
 
-Paper Review Agentは、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、効率的な論文調査を支援します。
+Openreview-agent-jaは、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、効率的な論文調査を支援します。
 
 ## ✨ 主な機能
 
