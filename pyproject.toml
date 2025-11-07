@@ -1,14 +1,14 @@
 [project]
-name = "openreview-agent-ja"
+name = "deep-openreview-research-ja"
 version = "1.0.0"
-description = "AIを活用した論文レビュー・分析エージェント（日本語ドキュメント） / AI-powered paper review and analysis agent with Japanese documentation"
+description = "AIを活用した深い論文レビュー・分析エージェント（日本語ドキュメント） / AI-powered deep paper review and research agent with Japanese documentation"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
     {name = "Yasu", email = "your-email@example.com"}
 ]
 license = {text = "MIT"}
-keywords = ["openreview", "paper-review", "ai-agent", "research", "llm", "langgraph"]
+keywords = ["openreview", "paper-review", "ai-agent", "research", "llm", "langgraph", "meta-review", "deep-research"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",

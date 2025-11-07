@@ -1,13 +1,13 @@
-# OpenReview Agent (日本語版)
+# Deep OpenReview Research (日本語版)
 
-AIを活用した論文レビュー・分析エージェント
+AIを活用した深い論文レビュー・分析エージェント
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
 ## 📋 概要
 
-OpenReview Agentは、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、効率的な論文調査を支援します。
+**Deep OpenReview Research** は、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、Meta Review、レビュー詳細、採択理由など、論文の深い情報を抽出し、効率的な論文調査を支援します。
 
 ## ✨ 主な機能
 
@@ -24,8 +24,8 @@ OpenReview Agentは、学会の採択論文を自動的に検索・評価し、�
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/tb-yasu/openreview-agent-ja.git
-cd openreview-agent-ja
+git clone https://github.com/tb-yasu/deep-openreview-research-ja.git
+cd deep-openreview-research-ja
 
 # 2. 仮想環境を作成してパッケージをインストール
 python -m venv venv
@@ -59,8 +59,8 @@ python run_paper_review.py \
 #### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/tb-yasu/openreview-agent-ja.git
-cd openreview-agent-ja
+git clone https://github.com/tb-yasu/deep-openreview-research-ja.git
+cd deep-openreview-research-ja
 ```
 
 #### 2. 仮想環境の作成
@@ -258,7 +258,7 @@ python run_paper_review.py \
 ## 🏗️ アーキテクチャ
 
 ```
-openreview-agent-ja/
+deep-openreview-research-ja/
 ├── fetch_all_papers.py      # 論文データ取得スクリプト
 ├── run_paper_review.py      # メイン実行スクリプト
 ├── calculate_accepted_avg_rating.py  # 統計計算ツール

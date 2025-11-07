@@ -396,7 +396,7 @@ def run_paper_review(args: argparse.Namespace) -> None:
                                 strengths = first_review['strengths']
                                 logger.info("**強み:**")
                                 logger.info(strengths[:150] + ("..." if len(strengths) > 150 else ""))
-                                logger.info("")
+                    logger.info("")
                     
                     # AI評価
                     if paper.get('llm_rationale'):
