@@ -40,7 +40,7 @@ cp .env.example .env
 python fetch_all_papers.py --venue NeurIPS --year 2025
 
 # 5. 論文レビューを実行
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "グラフ生成と創薬への応用に興味があります"
@@ -133,7 +133,7 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 ### パターン1: 自然言語で研究興味を指定（推奨）
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "グラフ生成に強い興味があります。関連して創薬への応用に興味があります"
@@ -142,7 +142,7 @@ python run_paper_review.py \
 ### パターン2: キーワードリストで指定
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-interests "graph generation,drug discovery,molecular design"
@@ -203,7 +203,7 @@ python run_paper_review.py \
 ### 例1: 基本的な使い方
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "大規模言語モデルの効率化に興味があります"
@@ -212,7 +212,7 @@ python run_paper_review.py \
 ### 例2: 詳細設定を指定
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "強化学習とその応用に興味があります。" \
@@ -224,7 +224,7 @@ python run_paper_review.py \
 ### 例3: キーワードベースのみ（高速）
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-interests "reinforcement learning,robotics" \
@@ -235,7 +235,7 @@ python run_paper_review.py \
 ### 例4: 詳細ログ付き実行
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "グラフニューラルネットワーク" \
@@ -245,7 +245,7 @@ python run_paper_review.py \
 ### 例5: カスタム出力設定
 
 ```bash
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "transformer architecture" \
@@ -260,7 +260,7 @@ python run_paper_review.py \
 ```
 deep-openreview-research-ja/
 ├── fetch_all_papers.py      # 論文データ取得スクリプト
-├── run_paper_review.py      # メイン実行スクリプト
+├── run_deep_research.py      # メイン実行スクリプト
 ├── calculate_accepted_avg_rating.py  # 統計計算ツール
 ├── app/
 │   ├── paper_review_workflow/  # 論文レビューワークフロー
@@ -356,7 +356,7 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 `--top-k` の値を小さくしてください：
 
 ```bash
-python run_paper_review.py ... --top-k 30
+python run_deep_research.py ... --top-k 30
 ```
 
 ### Meta Reviewやレビュー詳細が表示されない
@@ -375,13 +375,13 @@ python fetch_all_papers.py --venue NeurIPS --year 2025 --force
 
 ```bash
 # LLM評価をスキップ
-python run_paper_review.py ... --no-llm-eval
+python run_deep_research.py ... --no-llm-eval
 
 # 評価対象論文数を減らす
-python run_paper_review.py ... --top-k 50
+python run_deep_research.py ... --top-k 50
 
 # より高速なモデルを使用
-python run_paper_review.py ... --model gpt-4o-mini
+python run_deep_research.py ... --model gpt-4o-mini
 ```
 
 ## 🛠️ 技術スタック

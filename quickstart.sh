@@ -61,7 +61,7 @@ echo "実行を開始します..."
 echo ""
 
 # 公開版スクリプトを実行
-python run_paper_review.py \
+python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "私はグラフ生成と創薬への応用に興味があります。特に、分子グラフの生成やドラッグデザインに関連する研究を探しています。" \

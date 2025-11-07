@@ -4,7 +4,7 @@
 
 ## 📊 総合評価: ✅ **公開可能**
 
-3つの主要コンポーネント（fetch_all_papers.py、run_paper_review.py、app/）すべてが公開用として適切に整形されています。
+3つの主要コンポーネント（fetch_all_papers.py、run_deep_research.py、app/）すべてが公開用として適切に整形されています。
 
 ---
 
@@ -47,7 +47,7 @@ def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) 
 
 ---
 
-## 2. run_paper_review.py ⭐⭐⭐⭐⭐
+## 2. run_deep_research.py ⭐⭐⭐⭐⭐
 
 ### 評価: 完璧
 
@@ -216,7 +216,7 @@ app/paper_review_workflow/
 **すべての主要コンポーネントが公開可能な品質です。**
 
 - `fetch_all_papers.py`: 完璧
-- `run_paper_review.py`: 完璧
+- `run_deep_research.py`: 完璧
 - `app/paper_review_workflow/`: 良好（軽微な改善完了）
 
 公開前に検討すべき点：
