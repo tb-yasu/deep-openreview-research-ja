@@ -221,12 +221,41 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
     client = openreview.api.OpenReviewClient(baseurl="https://api2.openreview.net")
     venue_id = f"{venue}.cc/{year}/Conference"
     
-    # Fetch all submissions
+    # Fetch all submissions with retry logic
     logger.info("Connecting to OpenReview API...")
-    submissions = client.get_all_notes(
-        invitation=f"{venue_id}/-/Submission",
-        details="replies",
-    )
+    max_retries = 5
+    retry_delay = 10  # seconds
+    submissions = None
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Fetching submissions (attempt {attempt + 1}/{max_retries})...")
+            submissions = client.get_all_notes(
+                invitation=f"{venue_id}/-/Submission",
+                details="replies",
+            )
+            logger.success(f"Successfully fetched {len(submissions)} submissions")
+            break
+        except Exception as e:
+            logger.warning(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                logger.error("Failed to fetch submissions after all retries")
+                logger.error("")
+                logger.error("Possible solutions:")
+                logger.error("  1. Check your internet connection")
+                logger.error("  2. Try again in a few minutes (OpenReview API may be overloaded)")
+                logger.error("  3. Use existing cache if available (remove --force flag)")
+                logger.error("")
+                logger.error("If the problem persists, the OpenReview API may be experiencing issues.")
+                logger.error("You can check the API status at: https://openreview.net")
+                raise RuntimeError(f"Failed to fetch papers from OpenReview API after {max_retries} attempts") from e
+    
+    if submissions is None:
+        raise RuntimeError("Failed to fetch submissions - this should not happen")
     
     papers: list[dict[str, Any]] = []
     processed_ids: set[str] = set()
