@@ -224,6 +224,81 @@ class GeneratePaperReportNode:
                 lines.append(evaluation_rationale)
                 lines.append("")
             
+            # Meta Review（エリアチェアのまとめ）
+            meta_review = paper.get('meta_review') if isinstance(paper, dict) else getattr(paper, 'meta_review', None)
+            if meta_review and meta_review.strip():
+                lines.append("#### 📋 Meta Review（エリアチェアのまとめ）")
+                lines.append("")
+                # 長い場合は制限（最初の800文字程度）
+                if len(meta_review) > 800:
+                    lines.append(meta_review[:800] + "...")
+                else:
+                    lines.append(meta_review)
+                lines.append("")
+            
+            # Decision の詳細コメント
+            decision_comment = paper.get('decision_comment') if isinstance(paper, dict) else getattr(paper, 'decision_comment', None)
+            if decision_comment and decision_comment.strip():
+                lines.append("#### 📝 採択理由")
+                lines.append("")
+                # 長い場合は制限
+                if len(decision_comment) > 600:
+                    lines.append(decision_comment[:600] + "...")
+                else:
+                    lines.append(decision_comment)
+                lines.append("")
+            
+            # レビューの詳細（Strengths/Weaknesses）
+            reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
+            if reviews and len(reviews) > 0:
+                lines.append("#### 📊 レビュー詳細")
+                lines.append("")
+                for review_idx, review in enumerate(reviews[:3], 1):  # 最大3件のレビュー
+                    review_rating = review.get('rating', 'N/A')
+                    review_confidence = review.get('confidence', 'N/A')
+                    lines.append(f"**レビュー {review_idx}** (評価: {review_rating}, 確信度: {review_confidence})")
+                    lines.append("")
+                    
+                    # サマリー
+                    summary = review.get('summary', '')
+                    if summary and summary.strip():
+                        lines.append("**要約:**")
+                        summary_text = summary[:300] + ("..." if len(summary) > 300 else "")
+                        lines.append(summary_text)
+                        lines.append("")
+                    
+                    # 強み
+                    strengths = review.get('strengths', '')
+                    if strengths and strengths.strip():
+                        lines.append("**強み:**")
+                        strengths_text = strengths[:300] + ("..." if len(strengths) > 300 else "")
+                        lines.append(strengths_text)
+                        lines.append("")
+                    
+                    # 弱み
+                    weaknesses = review.get('weaknesses', '')
+                    if weaknesses and weaknesses.strip():
+                        lines.append("**弱み:**")
+                        weaknesses_text = weaknesses[:300] + ("..." if len(weaknesses) > 300 else "")
+                        lines.append(weaknesses_text)
+                        lines.append("")
+                
+                if len(reviews) > 3:
+                    lines.append(f"*他 {len(reviews) - 3} 件のレビューは省略*")
+                    lines.append("")
+            
+            # Author Final Remarks
+            author_remarks = paper.get('author_remarks') if isinstance(paper, dict) else getattr(paper, 'author_remarks', None)
+            if author_remarks and author_remarks.strip():
+                lines.append("#### 💬 著者からのコメント")
+                lines.append("")
+                # 長い場合は制限
+                if len(author_remarks) > 400:
+                    lines.append(author_remarks[:400] + "...")
+                else:
+                    lines.append(author_remarks)
+                lines.append("")
+            
             # LLM評価理由
             llm_rationale = paper.get('llm_rationale') if isinstance(paper, dict) else getattr(paper, 'llm_rationale', None)
             if llm_rationale:

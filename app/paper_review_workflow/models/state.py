@@ -24,6 +24,11 @@ class Paper(BaseModel):
     rating_avg: float | None = Field(default=None, title="平均評価")
     confidence_avg: float | None = Field(default=None, title="平均confidence")
     decision: str | None = Field(default=None, title="採択判定")
+    
+    # 追加のOpenReview情報
+    meta_review: str | None = Field(default=None, title="メタレビュー（エリアチェアのまとめ）")
+    author_remarks: str | None = Field(default=None, title="著者の最終コメント")
+    decision_comment: str | None = Field(default=None, title="採択判定の詳細コメント")
 
 
 class EvaluatedPaper(Paper):

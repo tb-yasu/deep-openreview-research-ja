@@ -113,15 +113,56 @@ def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) 
             if any('Decision' in inv for inv in getattr(note, 'invitations', []))
         ]
         decision = "N/A"
+        decision_comment = ""
         if decisions:
             decision_content = decisions[0].content.get("decision", {})
             decision = decision_content.get("value", "N/A") if isinstance(decision_content, dict) else str(decision_content)
+            
+            # Extract decision comment/justification
+            decision_note = decisions[0].content
+            decision_comment = (
+                decision_note.get("comment", {}).get("value", "") or
+                decision_note.get("justification", {}).get("value", "") or
+                decision_note.get("metareview", {}).get("value", "")
+            )
+        
+        # Extract Meta Review (Area Chair summary)
+        meta_reviews = [
+            note for note in all_notes
+            if any('Meta_Review' in inv for inv in getattr(note, 'invitations', []))
+        ]
+        meta_review_text = ""
+        if meta_reviews:
+            meta_content = meta_reviews[0].content
+            meta_review_text = (
+                meta_content.get("metareview", {}).get("value", "") or
+                meta_content.get("recommendation", {}).get("value", "") or
+                meta_content.get("summary", {}).get("value", "")
+            )
+        
+        # Extract Author Final Remarks
+        author_remarks = [
+            note for note in all_notes
+            if any('Author_Final_Remarks' in inv or 'Camera_Ready_Revision' in inv 
+                   for inv in getattr(note, 'invitations', []))
+        ]
+        author_remarks_text = ""
+        if author_remarks:
+            remarks_content = author_remarks[0].content
+            author_remarks_text = (
+                remarks_content.get("author_remarks", {}).get("value", "") or
+                remarks_content.get("comment", {}).get("value", "") or
+                remarks_content.get("summary_of_changes", {}).get("value", "")
+            )
         
         return {
             "reviews": review_list,
             "rating_avg": sum(ratings) / len(ratings) if ratings else None,
             "confidence_avg": sum(confidences) / len(confidences) if confidences else None,
             "decision": decision,
+            "meta_review": meta_review_text,
+            "author_remarks": author_remarks_text,
+            "decision_comment": decision_comment,
         }
     except Exception as e:
         logger.debug(f"Failed to fetch reviews for {paper_id}: {e}")
@@ -130,6 +171,9 @@ def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) 
             "rating_avg": None,
             "confidence_avg": None,
             "decision": "N/A",
+            "meta_review": "",
+            "author_remarks": "",
+            "decision_comment": "",
         }
 
 

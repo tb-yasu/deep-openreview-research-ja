@@ -375,6 +375,29 @@ def run_paper_review(args: argparse.Namespace) -> None:
                                 logger.info("  └ 📊 発表形式: Poster Presentation")
                     logger.info("")
                     
+                    # Meta Review（エリアチェアのまとめ）
+                    if paper.get('meta_review') and paper['meta_review'].strip():
+                        logger.info("#### 📋 Meta Review（エリアチェアのまとめ）")
+                        logger.info("")
+                        meta_review = paper['meta_review']
+                        if len(meta_review) > 200:
+                            meta_review = meta_review[:200] + "..."
+                        logger.info(meta_review)
+                        logger.info("")
+                    
+                    # レビューの要約（最初の1件のみ表示）
+                    reviews = paper.get('reviews', [])
+                    if reviews and len(reviews) > 0:
+                        first_review = reviews[0]
+                        if first_review.get('summary') or first_review.get('strengths'):
+                            logger.info("#### 📊 レビューハイライト")
+                            logger.info("")
+                            if first_review.get('strengths'):
+                                strengths = first_review['strengths']
+                                logger.info("**強み:**")
+                                logger.info(strengths[:150] + ("..." if len(strengths) > 150 else ""))
+                                logger.info("")
+                    
                     # AI評価
                     if paper.get('llm_rationale'):
                         logger.info("#### AI評価（内容分析）")

@@ -17,6 +17,8 @@ OpenReview Agentは、学会の採択論文を自動的に検索・評価し、�
 - 🔑 **同義語展開**: キーワードの同義語を自動生成して検索範囲を拡大
 - 💬 **自然言語入力**: 研究興味を自然な文章で記述可能
 - 📝 **詳細レポート**: Markdown形式の詳細レポートを自動生成
+- 🎤 **発表形式表示**: Oral/Spotlight/Posterの区別を自動抽出
+- 📋 **レビュー詳細**: Meta Review、レビュアーコメント、採択理由を表示
 
 ## 🚀 クイックスタート
 
@@ -304,7 +306,12 @@ storage/outputs/paper_review_report_NeurIPS_2025.md
   - タイトル、著者、キーワード
   - 概要
   - スコア詳細（関連性、新規性、インパクト、AI評価）
+  - 採択判定と発表形式（Oral/Spotlight/Poster）
   - OpenReview評価とAI評価
+  - **📋 Meta Review（エリアチェアのまとめ）**
+  - **📝 採択理由（Decision Comment）**
+  - **📊 レビュー詳細（Strengths/Weaknesses）**
+  - **💬 著者からのコメント（Author Remarks）**
   - リンク（OpenReview、PDF）
 
 ## 🔧 トラブルシューティング
@@ -351,6 +358,16 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 ```bash
 python run_paper_review.py ... --top-k 30
 ```
+
+### Meta Reviewやレビュー詳細が表示されない
+
+古いキャッシュを使用している場合、新しいフィールドが含まれていない可能性があります。論文データを再取得してください：
+
+```bash
+python fetch_all_papers.py --venue NeurIPS --year 2025 --force
+```
+
+**注意**: 再取得には60-90分程度かかります。
 
 ### 実行が遅い
 
