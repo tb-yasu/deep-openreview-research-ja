@@ -32,12 +32,21 @@ def convert_paper_to_dict(
         "relevance_score": paper.relevance_score,
         "novelty_score": paper.novelty_score,
         "impact_score": paper.impact_score,
+        "practicality_score": paper.practicality_score,  # 統合LLM評価
         "rating_avg": paper.rating_avg,
         "reviews": paper.reviews,
         "decision": paper.decision,
         "forum_url": paper.forum_url,
         "pdf_url": paper.pdf_url,
         "evaluation_rationale": paper.evaluation_rationale,
+        # 統合LLM評価の新フィールド
+        "review_summary": paper.review_summary,
+        "field_insights": paper.field_insights,
+        "ai_rationale": paper.ai_rationale,
+        # OpenReview詳細情報
+        "meta_review": paper.meta_review,
+        "decision_comment": paper.decision_comment,
+        "author_remarks": paper.author_remarks,
     }
     
     # ランクがある場合は追加

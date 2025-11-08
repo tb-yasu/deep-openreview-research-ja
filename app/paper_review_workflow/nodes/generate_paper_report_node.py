@@ -250,43 +250,103 @@ class GeneratePaperReportNode:
                     lines.append(decision_comment)
                 lines.append("")
             
-            # レビューの詳細（Strengths/Weaknesses）
+            # レビューの詳細（Strengths/Weaknesses）- コメントアウト（ユーザー要望により非表示）
+            # reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
+            # if reviews and len(reviews) > 0:
+            #     lines.append("#### 📊 レビュー詳細")
+            #     lines.append("")
+            #     for review_idx, review in enumerate(reviews[:3], 1):  # 最大3件のレビュー
+            #         review_rating = review.get('rating', 'N/A')
+            #         review_confidence = review.get('confidence', 'N/A')
+            #         lines.append(f"**レビュー {review_idx}** (評価: {review_rating}, 確信度: {review_confidence})")
+            #         lines.append("")
+            #         
+            #         # サマリー
+            #         summary = review.get('summary', '')
+            #         if summary and summary.strip():
+            #             lines.append("**要約:**")
+            #             summary_text = summary[:300] + ("..." if len(summary) > 300 else "")
+            #             lines.append(summary_text)
+            #             lines.append("")
+            #         
+            #         # 強み
+            #         strengths = review.get('strengths', '')
+            #         if strengths and strengths.strip():
+            #             lines.append("**強み:**")
+            #             strengths_text = strengths[:300] + ("..." if len(strengths) > 300 else "")
+            #             lines.append(strengths_text)
+            #             lines.append("")
+            #         
+            #         # 弱み
+            #         weaknesses = review.get('weaknesses', '')
+            #         if weaknesses and weaknesses.strip():
+            #             lines.append("**弱み:**")
+            #             weaknesses_text = weaknesses[:300] + ("..." if len(weaknesses) > 300 else "")
+            #             lines.append(weaknesses_text)
+            #             lines.append("")
+            #     
+            #     if len(reviews) > 3:
+            #         lines.append(f"*他 {len(reviews) - 3} 件のレビューは省略*")
+            #         lines.append("")
+            
+            # レビュースコアの平均値を表示
             reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
             if reviews and len(reviews) > 0:
-                lines.append("#### 📊 レビュー詳細")
+                lines.append("#### 📊 レビュースコアの平均")
                 lines.append("")
-                for review_idx, review in enumerate(reviews[:3], 1):  # 最大3件のレビュー
-                    review_rating = review.get('rating', 'N/A')
-                    review_confidence = review.get('confidence', 'N/A')
-                    lines.append(f"**レビュー {review_idx}** (評価: {review_rating}, 確信度: {review_confidence})")
-                    lines.append("")
-                    
-                    # サマリー
-                    summary = review.get('summary', '')
-                    if summary and summary.strip():
-                        lines.append("**要約:**")
-                        summary_text = summary[:300] + ("..." if len(summary) > 300 else "")
-                        lines.append(summary_text)
-                        lines.append("")
-                    
-                    # 強み
-                    strengths = review.get('strengths', '')
-                    if strengths and strengths.strip():
-                        lines.append("**強み:**")
-                        strengths_text = strengths[:300] + ("..." if len(strengths) > 300 else "")
-                        lines.append(strengths_text)
-                        lines.append("")
-                    
-                    # 弱み
-                    weaknesses = review.get('weaknesses', '')
-                    if weaknesses and weaknesses.strip():
-                        lines.append("**弱み:**")
-                        weaknesses_text = weaknesses[:300] + ("..." if len(weaknesses) > 300 else "")
-                        lines.append(weaknesses_text)
-                        lines.append("")
                 
-                if len(reviews) > 3:
-                    lines.append(f"*他 {len(reviews) - 3} 件のレビューは省略*")
+                # 数値フィールドを収集
+                score_fields = {}
+                for review in reviews:
+                    for key, value in review.items():
+                        # 数値または数値に変換可能なフィールドのみ
+                        if key in ['summary', 'strengths', 'weaknesses', 'detailed_comments', 
+                                  'main_review', 'review_text', 'comments', 'strengths_and_weaknesses']:
+                            continue  # テキストフィールドはスキップ
+                        
+                        try:
+                            # 数値に変換してみる
+                            if isinstance(value, (int, float)):
+                                numeric_value = float(value)
+                            elif isinstance(value, str) and value.strip():
+                                # "3.5/5" のような形式を処理
+                                if '/' in value:
+                                    numeric_value = float(value.split('/')[0].strip())
+                                else:
+                                    numeric_value = float(value)
+                            else:
+                                continue
+                            
+                            if key not in score_fields:
+                                score_fields[key] = []
+                            score_fields[key].append(numeric_value)
+                        except (ValueError, TypeError):
+                            continue
+                
+                # 平均値を計算して表示
+                if score_fields:
+                    lines.append("| 項目 | 平均値 | レビュー数 |")
+                    lines.append("|------|--------|-----------|")
+                    
+                    # rating と confidence を最初に表示
+                    priority_fields = ['rating', 'overall_recommendation', 'confidence']
+                    for field in priority_fields:
+                        if field in score_fields:
+                            avg_value = sum(score_fields[field]) / len(score_fields[field])
+                            count = len(score_fields[field])
+                            field_name = self._translate_field_name(field)
+                            lines.append(f"| {field_name} | {avg_value:.2f} | {count} |")
+                    
+                    # その他のフィールドをアルファベット順に表示
+                    other_fields = sorted([f for f in score_fields.keys() if f not in priority_fields])
+                    for field in other_fields:
+                        avg_value = sum(score_fields[field]) / len(score_fields[field])
+                        count = len(score_fields[field])
+                        field_name = self._translate_field_name(field)
+                        lines.append(f"| {field_name} | {avg_value:.2f} | {count} |")
+                    
+                    lines.append("")
+                    lines.append(f"*{len(reviews)}件のレビューから集計*")
                     lines.append("")
             
             # Author Final Remarks
@@ -320,4 +380,48 @@ class GeneratePaperReportNode:
             lines.append("")
         
         return "\n".join(lines)
+    
+    def _translate_field_name(self, field: str) -> str:
+        """レビューフィールド名を日本語に翻訳.
+        
+        Args:
+        ----
+            field: 英語のフィールド名
+            
+        Returns:
+        -------
+            日本語のフィールド名
+        """
+        translations = {
+            # 基本スコア
+            'rating': '総合評価 (Rating)',
+            'overall_recommendation': '総合評価 (Overall Recommendation)',
+            'confidence': '確信度 (Confidence)',
+            'score': 'スコア (Score)',
+            'recommendation': '推薦度 (Recommendation)',
+            
+            # ICLR/NeurIPS/ICML 共通フィールド
+            'soundness': '健全性 (Soundness)',
+            'presentation': 'プレゼンテーション (Presentation)',
+            'contribution': '貢献度 (Contribution)',
+            'originality': '独創性 (Originality)',
+            'quality': '品質 (Quality)',
+            'clarity': '明瞭性 (Clarity)',
+            'significance': '重要性 (Significance)',
+            
+            # ICML固有フィールド
+            'experimental_designs_or_analyses': '実験設計・分析 (Experimental Design)',
+            'methods_and_evaluation_criteria': '手法・評価基準 (Methods & Evaluation)',
+            'reproducibility': '再現性 (Reproducibility)',
+            'claims_and_evidence': '主張と根拠 (Claims & Evidence)',
+            'impact': 'インパクト (Impact)',
+            'novelty': '新規性 (Novelty)',
+            
+            # その他
+            'technical_novelty_and_significance': '技術的新規性・重要性',
+            'potential_for_real_world_impact': '実世界へのインパクトの可能性',
+            'ethical_considerations': '倫理的考慮事項',
+        }
+        
+        return translations.get(field, field.replace('_', ' ').title())
 

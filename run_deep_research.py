@@ -55,7 +55,7 @@ def parse_arguments() -> argparse.Namespace:
 
   # 詳細設定
   python run_paper_review.py --venue NeurIPS --year 2025 \\
-    --research-description "量子コンピューティングとLLMへの応用" \\
+    --research-description "グラフ生成と創薬への応用に興味があります" \\
     --top-k 50 --min-relevance-score 0.3 --model gpt-4o
         """,
     )
