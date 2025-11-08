@@ -37,10 +37,10 @@ class ReRankPapersNode:
         """
         logger.info(f"Re-ranking {len(state.llm_evaluated_papers)} papers based on LLM scores...")
         
-        # final_scoreでソート（降順）
+        # overall_scoreでソート（降順） - 統合LLM評価システムではoverall_scoreを使用
         re_ranked_papers = sorted(
             state.llm_evaluated_papers,
-            key=lambda p: p.final_score if p.final_score is not None else 0.0,
+            key=lambda p: p.overall_score if p.overall_score is not None else 0.0,
             reverse=True
         )
         
@@ -53,10 +53,18 @@ class ReRankPapersNode:
         
         # 統計情報
         if re_ranked_papers:
-            avg_final_score = sum(p.final_score for p in re_ranked_papers if p.final_score) / len(re_ranked_papers)
-            logger.info(f"Average final score: {avg_final_score:.3f}")
-            logger.info(f"Top paper: {re_ranked_papers[0].title[:50]}... (Score: {re_ranked_papers[0].final_score:.3f})")
-            logger.info(f"Bottom paper: {re_ranked_papers[-1].title[:50]}... (Score: {re_ranked_papers[-1].final_score:.3f})")
+            scores = [p.overall_score for p in re_ranked_papers if p.overall_score is not None]
+            if scores:
+                avg_score = sum(scores) / len(scores)
+                logger.info(f"Average overall score: {avg_score:.3f}")
+                top_score = re_ranked_papers[0].overall_score
+                bottom_score = re_ranked_papers[-1].overall_score
+                if top_score is not None:
+                    logger.info(f"Top paper: {re_ranked_papers[0].title[:50]}... (Score: {top_score:.3f})")
+                if bottom_score is not None:
+                    logger.info(f"Bottom paper: {re_ranked_papers[-1].title[:50]}... (Score: {bottom_score:.3f})")
+            else:
+                logger.warning("No valid overall_score found in papers")
         
         logger.success(f"Re-ranked papers: {len(re_ranked_papers)} total, top {len(top_papers)} selected")
         
