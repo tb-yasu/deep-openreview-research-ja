@@ -67,3 +67,13 @@ htmlcov/
 # Ruff
 .ruff_cache/
 
+# Development/Debug files
+CODE_QUALITY_REPORT.md
+*_REVIEW_FIX.md
+*_FIX.md
+calculate_*.py
+create_*_from_checkpoint.py
+examples.sh
+debug_*.py
+test_*.py
+
