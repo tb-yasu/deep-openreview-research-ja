@@ -12,13 +12,14 @@ AIを活用した深い論文レビュー・分析エージェント
 ## ✨ 主な機能
 
 - 🔍 **自動論文検索**: 指定された学会・年の論文を自動検索
-- 🤖 **AI評価**: LLMを使用した論文の関連性・新規性・実用性の評価
+- 🤖 **統合LLM評価**: 1回の呼び出しで関連性・新規性・インパクト・実用性を総合評価
 - 📊 **スコアリング**: OpenReviewの評価とAI評価を組み合わせた総合スコア
 - 🔑 **同義語展開**: キーワードの同義語を自動生成して検索範囲を拡大
 - 💬 **自然言語入力**: 研究興味を自然な文章で記述可能
 - 📝 **詳細レポート**: Markdown形式の詳細レポートを自動生成
 - 🎤 **発表形式表示**: Oral/Spotlight/Posterの区別を自動抽出
-- 📋 **レビュー詳細**: Meta Review、レビュアーコメント、採択理由を表示
+- 📋 **深いレビュー分析**: レビュー要約、スコア平均、採択理由、著者コメントを表示
+- 🔄 **動的フィールド検出**: ICLR/NeurIPS/ICML等、各会議の評価項目に自動対応
 
 ## 🚀 クイックスタート
 
@@ -253,15 +254,13 @@ python run_deep_research.py \
   --output-file transformers_review.md
 ```
 
-その他の使用例は `examples.sh` を参照してください。
-
 ## 🏗️ アーキテクチャ
 
 ```
 deep-openreview-research-ja/
 ├── fetch_all_papers.py      # 論文データ取得スクリプト
-├── run_deep_research.py      # メイン実行スクリプト
-├── calculate_accepted_avg_rating.py  # 統計計算ツール
+├── run_deep_research.py     # メイン実行スクリプト
+├── quickstart.sh            # クイックスタートスクリプト
 ├── app/
 │   ├── paper_review_workflow/  # 論文レビューワークフロー
 │   │   ├── agent.py            # メインエージェント
@@ -269,7 +268,11 @@ deep-openreview-research-ja/
 │   │   ├── constants.py        # 定数
 │   │   ├── models/             # データモデル
 │   │   ├── nodes/              # ワークフローノード
-│   │   └── tools/              # ツール関数
+│   │   │   ├── unified_llm_evaluate_papers_node.py  # 統合LLM評価
+│   │   │   ├── generate_paper_report_node.py        # レポート生成
+│   │   │   └── ...
+│   │   ├── tools/              # ツール関数
+│   │   └── utils/              # ユーティリティ
 │   ├── core/                   # コア機能
 │   ├── domain/                 # ドメイン層
 │   └── infrastructure/         # インフラ層
@@ -286,9 +289,16 @@ deep-openreview-research-ja/
 3. **論文検索**: 指定された学会・年の論文を検索
 4. **初期評価**: キーワードマッチングで関連性スコアを計算
 5. **ランキング**: スコアに基づいて上位k件を選択
-6. **LLM評価**: 上位論文をLLMで詳細評価（関連性、新規性、実用性）
-7. **再ランキング**: LLM評価を含めた最終スコアで再ランク付け
-8. **レポート生成**: 詳細レポートを生成
+6. **統合LLM評価**: 1回の呼び出しで以下を総合評価
+   - 関連性スコア（relevance）
+   - 新規性スコア（novelty）
+   - インパクトスコア（impact）
+   - 実用性スコア（practicality）
+   - レビュー要約（review_summary）
+   - 評価データソース（field_insights）
+   - AI評価理由（ai_rationale）
+7. **再ランキング**: LLM評価スコアで最終ランク付け
+8. **レポート生成**: 詳細レポートを生成（レビュースコア平均も含む）
 
 ## 📝 出力
 
@@ -305,12 +315,13 @@ storage/outputs/paper_review_report_NeurIPS_2025.md
 - トップ論文の詳細情報
   - タイトル、著者、キーワード
   - 概要
-  - スコア詳細（関連性、新規性、インパクト、AI評価）
+  - スコア詳細（関連性、新規性、インパクト、実用性）
   - 採択判定と発表形式（Oral/Spotlight/Poster）
-  - OpenReview評価とAI評価
-  - **📋 Meta Review（エリアチェアのまとめ）**
-  - **📝 採択理由（Decision Comment）**
-  - **📊 レビュー詳細（Strengths/Weaknesses）**
+  - **🤖 AI評価** - 統合LLM評価による詳細な分析
+  - **📊 レビュー要約** - 全レビューワーの評価を統合した要約
+  - **🔍 評価データソース** - 使用したレビューフィールドの説明
+  - **📝 採択理由（Decision Comment）** - Program Chairsによる採択判定コメント
+  - **📊 レビュースコアの平均** - 各評価項目の平均値（会議により異なる）
   - **💬 著者からのコメント（Author Remarks）**
   - リンク（OpenReview、PDF）
 
@@ -359,15 +370,19 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 python run_deep_research.py ... --top-k 30
 ```
 
-### Meta Reviewやレビュー詳細が表示されない
+### AI評価やレビュー要約が表示されない
 
-古いキャッシュを使用している場合、新しいフィールドが含まれていない可能性があります。論文データを再取得してください：
+古いキャッシュを使用している場合、動的フィールド検出機能が含まれていない可能性があります。論文データを再取得してください：
 
 ```bash
 python fetch_all_papers.py --venue NeurIPS --year 2025 --force
 ```
 
 **注意**: 再取得には60-90分程度かかります。
+
+### ICMLでレビュースコアが1つしか表示されない
+
+これは正常な動作です。ICML 2025のレビューシステムは数値スコアが`overall_recommendation`のみで、他の評価項目（実験設計、手法など）はテキスト記述形式です。これらのテキスト評価は「📊 レビュー要約」セクションで統合LLMによって要約されています。
 
 ### 実行が遅い
 
