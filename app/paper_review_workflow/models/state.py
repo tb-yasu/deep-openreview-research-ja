@@ -34,6 +34,7 @@ class Paper(BaseModel):
 class EvaluatedPaper(Paper):
     """評価済み論文の情報を表すモデル."""
     
+    # 統合LLM評価スコア（新システム）
     relevance_score: float | None = Field(
         default=None,
         title="関連性スコア",
@@ -49,46 +50,71 @@ class EvaluatedPaper(Paper):
         title="インパクトスコア",
         description="研究の潜在的影響力（0.0-1.0）",
     )
+    practicality_score: float | None = Field(
+        default=None,
+        title="実用性スコア",
+        description="実際の応用可能性（0.0-1.0）",
+    )
     overall_score: float | None = Field(
         default=None,
         title="総合スコア",
-        description="総合評価スコア（0.0-1.0）",
+        description="4つのスコアの重み付き平均（0.0-1.0）",
     )
+    
+    # 統合LLM評価による追加情報
+    review_summary: str | None = Field(
+        default=None,
+        title="レビュー要約",
+        description="OpenReviewレビューの統合要約",
+    )
+    field_insights: str | None = Field(
+        default=None,
+        title="フィールド活用の説明",
+        description="どのレビューフィールドを主に使用したかの説明",
+    )
+    ai_rationale: str | None = Field(
+        default=None,
+        title="AI評価の根拠",
+        description="AIによる評価の詳細な理由（2-3文）",
+    )
+    
+    # 旧システムとの互換性維持
     evaluation_rationale: str = Field(
         default="",
-        title="評価理由",
-        description="スコアの根拠となる詳細な理由",
+        title="評価理由（旧）",
+        description="スコアの根拠となる詳細な理由（後方互換性のため残す）",
     )
     citation_count: int | None = Field(
         default=None,
         title="被引用数",
         description="Semantic Scholarでの被引用数",
     )
-    # LLM評価スコア
+    
+    # 旧LLM評価スコア（後方互換性のため残す）
     llm_relevance_score: float | None = Field(
         default=None,
-        title="LLM関連性スコア",
-        description="LLMが評価した研究興味との関連性スコア（0.0-1.0）",
+        title="LLM関連性スコア（旧）",
+        description="旧システムのLLM関連性スコア（0.0-1.0）",
     )
     llm_novelty_score: float | None = Field(
         default=None,
-        title="LLM新規性スコア",
-        description="LLMが評価した新規性スコア（0.0-1.0）",
+        title="LLM新規性スコア（旧）",
+        description="旧システムのLLM新規性スコア（0.0-1.0）",
     )
     llm_practical_score: float | None = Field(
         default=None,
-        title="LLM実用性スコア",
-        description="LLMが評価した実用性スコア（0.0-1.0）",
+        title="LLM実用性スコア（旧）",
+        description="旧システムのLLM実用性スコア（0.0-1.0）",
     )
     llm_rationale: str | None = Field(
         default=None,
-        title="LLM評価理由",
-        description="LLMによる評価の詳細な理由",
+        title="LLM評価理由（旧）",
+        description="旧システムのLLM評価理由",
     )
     final_score: float | None = Field(
         default=None,
-        title="最終スコア",
-        description="OpenReviewスコアとLLMスコアを統合した最終スコア（0.0-1.0）",
+        title="最終スコア（旧）",
+        description="旧システムの最終スコア（0.0-1.0）",
     )
     rank: int | None = Field(
         default=None,

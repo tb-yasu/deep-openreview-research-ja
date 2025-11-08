@@ -130,23 +130,18 @@ class GeneratePaperReportNode:
             lines.append(f"### {rank}. {title}")
             lines.append("")
             
-            # スコア表示
+            # スコア表示（統合LLM評価版）
             lines.append("#### スコア")
             lines.append("")
             lines.append(f"| 項目 | スコア |")
             lines.append(f"|------|--------|")
             
-            # 最終スコア（LLM評価後）
-            final_score = paper.get('final_score') if isinstance(paper, dict) else getattr(paper, 'final_score', None)
-            if final_score is not None:
-                lines.append(f"| **最終スコア** | **{final_score:.3f}** |")
-            
-            # OpenReview総合スコア
+            # 総合スコア（4つの重み付き平均）
             overall_score = paper.get('overall_score') if isinstance(paper, dict) else getattr(paper, 'overall_score', None)
             if overall_score is not None:
-                lines.append(f"| OpenReview総合 | {overall_score:.3f} |")
+                lines.append(f"| **総合スコア** | **{overall_score:.3f}** |")
             
-            # OpenReview詳細スコア
+            # AI評価詳細スコア
             relevance_score = paper.get('relevance_score') if isinstance(paper, dict) else getattr(paper, 'relevance_score', None)
             if relevance_score is not None:
                 lines.append(f"| 　├ 関連性 | {relevance_score:.3f} |")
@@ -157,20 +152,11 @@ class GeneratePaperReportNode:
             
             impact_score = paper.get('impact_score') if isinstance(paper, dict) else getattr(paper, 'impact_score', None)
             if impact_score is not None:
-                lines.append(f"| 　└ インパクト | {impact_score:.3f} |")
+                lines.append(f"| 　├ インパクト | {impact_score:.3f} |")
             
-            # LLMスコア
-            llm_relevance = paper.get('llm_relevance_score') if isinstance(paper, dict) else getattr(paper, 'llm_relevance_score', None)
-            llm_novelty = paper.get('llm_novelty_score') if isinstance(paper, dict) else getattr(paper, 'llm_novelty_score', None)
-            llm_practical = paper.get('llm_practical_score') if isinstance(paper, dict) else getattr(paper, 'llm_practical_score', None)
-            
-            if any([llm_relevance is not None, llm_novelty is not None, llm_practical is not None]):
-                if llm_relevance is not None:
-                    lines.append(f"| AI評価（関連性） | {llm_relevance:.3f} |")
-                if llm_novelty is not None:
-                    lines.append(f"| AI評価（新規性） | {llm_novelty:.3f} |")
-                if llm_practical is not None:
-                    lines.append(f"| AI評価（実用性） | {llm_practical:.3f} |")
+            practicality_score = paper.get('practicality_score') if isinstance(paper, dict) else getattr(paper, 'practicality_score', None)
+            if practicality_score is not None:
+                lines.append(f"| 　└ 実用性 | {practicality_score:.3f} |")
             
             # OpenReview平均評価
             rating_avg = paper.get('rating_avg') if isinstance(paper, dict) else getattr(paper, 'rating_avg', None)
@@ -216,12 +202,28 @@ class GeneratePaperReportNode:
                 lines.append(abstract)
                 lines.append("")
             
-            # OpenReview評価理由
-            evaluation_rationale = paper.get('evaluation_rationale') if isinstance(paper, dict) else getattr(paper, 'evaluation_rationale', None)
-            if evaluation_rationale:
-                lines.append("#### OpenReview評価")
+            # AI評価（統合LLM評価）
+            ai_rationale = paper.get('ai_rationale') if isinstance(paper, dict) else getattr(paper, 'ai_rationale', None)
+            if ai_rationale and ai_rationale.strip():
+                lines.append("#### 🤖 AI評価")
                 lines.append("")
-                lines.append(evaluation_rationale)
+                lines.append(ai_rationale)
+                lines.append("")
+            
+            # レビュー要約
+            review_summary = paper.get('review_summary') if isinstance(paper, dict) else getattr(paper, 'review_summary', None)
+            if review_summary and review_summary.strip():
+                lines.append("#### 📊 レビュー要約")
+                lines.append("")
+                lines.append(review_summary)
+                lines.append("")
+            
+            # フィールド活用の説明
+            field_insights = paper.get('field_insights') if isinstance(paper, dict) else getattr(paper, 'field_insights', None)
+            if field_insights and field_insights.strip():
+                lines.append("#### 🔍 評価データソース")
+                lines.append("")
+                lines.append(field_insights)
                 lines.append("")
             
             # Meta Review（エリアチェアのまとめ）
