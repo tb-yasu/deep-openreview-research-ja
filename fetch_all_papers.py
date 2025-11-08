@@ -41,21 +41,123 @@ from loguru import logger
 load_dotenv()
 
 
-def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) -> dict[str, Any]:
-    """Fetch review information for a specific paper.
+def detect_all_review_fields(
+    client: openreview.api.OpenReviewClient, 
+    venue_id: str, 
+    num_samples: int = 3
+) -> set[str]:
+    """Detect all available review fields from sample papers.
+    
+    This function inspects a few sample papers to discover what review fields
+    are actually available in this conference. Different conferences use different
+    field names (e.g., NeurIPS uses "strengths_and_weaknesses" while ICLR uses
+    separate "strengths" and "weaknesses" fields).
+    
+    Args:
+    ----
+        client: OpenReview API client
+        venue_id: Conference venue ID (e.g., "NeurIPS.cc/2025/Conference")
+        num_samples: Number of sample papers to inspect (default: 3)
+        
+    Returns:
+    -------
+        Set of field names found in reviews (e.g., {"rating", "confidence", "summary", ...})
+        
+    Note:
+    ----
+        This function is called once at the start to discover the schema.
+        It's a lightweight operation (only fetches 3 papers).
+    """
+    logger.info(f"🔍 Detecting available review fields from {num_samples} sample papers...")
+    
+    all_fields = set()
+    papers_checked = 0
+    
+    try:
+        # Fetch a few sample submissions
+        sample_papers = client.get_notes(
+            invitation=f"{venue_id}/-/Submission",
+            limit=num_samples * 3  # Get more than needed in case some have no reviews
+        )
+        
+        for paper in sample_papers:
+            if papers_checked >= num_samples:
+                break
+            
+            try:
+                # Fetch all notes for this paper
+                all_notes = client.get_notes(forum=paper.id)
+                
+                # Find official reviews
+                reviews = [
+                    note for note in all_notes
+                    if any('Official_Review' in inv for inv in getattr(note, 'invitations', []))
+                ]
+                
+                if not reviews:
+                    continue
+                
+                # Collect all field names from all reviews
+                for review in reviews:
+                    if hasattr(review, 'content') and review.content:
+                        all_fields.update(review.content.keys())
+                
+                papers_checked += 1
+                logger.debug(f"  ✓ Sampled paper {papers_checked}/{num_samples}: {len(all_fields)} fields found so far")
+                
+            except Exception as e:
+                logger.debug(f"  ⚠ Failed to sample paper {paper.id}: {e}")
+                continue
+        
+        if not all_fields:
+            logger.warning("⚠ No review fields detected from samples. Using fallback fields.")
+            # Fallback to minimal fields
+            return {"rating", "confidence", "summary"}
+        
+        # Sort for consistent display
+        sorted_fields = sorted(all_fields)
+        logger.success(f"✓ Detected {len(sorted_fields)} review fields:")
+        
+        # Display in a nice format (4 columns)
+        for i in range(0, len(sorted_fields), 4):
+            fields_row = sorted_fields[i:i+4]
+            logger.info(f"  • {' | '.join(f'{f:25s}' for f in fields_row)}")
+        
+        return all_fields
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to detect fields: {e}")
+        logger.warning("⚠ Using fallback fields: rating, confidence, summary")
+        # Fallback to minimal fields
+        return {"rating", "confidence", "summary"}
+
+
+def fetch_paper_reviews_dynamic(
+    client: openreview.api.OpenReviewClient, 
+    paper_id: str,
+    detected_fields: set[str]
+) -> dict[str, Any]:
+    """Fetch review information for a specific paper with dynamic field extraction.
+    
+    This function extracts ALL fields that were detected during the initial field
+    discovery phase. This makes it adaptable to any conference's review schema.
     
     Args:
     ----
         client: OpenReview API client
         paper_id: Unique paper identifier
+        detected_fields: Set of field names to extract from reviews
         
     Returns:
     -------
         Dictionary containing review data:
-            - reviews: List of review dictionaries
+            - reviews: List of review dictionaries with all detected fields
             - rating_avg: Average rating (float or None)
             - confidence_avg: Average confidence (float or None)
             - decision: Acceptance decision string
+            - meta_review: Meta review text (Area Chair summary)
+            - author_remarks: Author final remarks
+            - decision_comment: Decision justification comment
             
     Note:
     ----
@@ -66,46 +168,93 @@ def fetch_paper_reviews(client: openreview.api.OpenReviewClient, paper_id: str) 
         # Fetch all notes associated with this paper
         all_notes = client.get_notes(forum=paper_id)
         
-        # Extract official reviews (exclude rebuttals and meta-reviews)
-        reviews = [
-            note for note in all_notes
-            if any('Official_Review' in inv for inv in getattr(note, 'invitations', []))
-            and 'rating' in note.content  # Ensure it's an actual review
-        ]
+        # Extract official reviews (exclude rebuttals, comments, and meta-reviews)
+        # Different conferences use different fields for scores:
+        # - NeurIPS/ICLR: 'rating'
+        # - ICML: 'overall_recommendation'
+        # Strategy: Accept if it has Official_Review invitation AND one of these conditions:
+        #   1. Has 'rating' or 'overall_recommendation' field (most common score fields)
+        #   2. Has 'summary' field AND has many other fields (real reviews are comprehensive)
+        reviews = []
+        for note in all_notes:
+            invitations = getattr(note, 'invitations', [])
+            if not any('Official_Review' in inv for inv in invitations):
+                continue
+            
+            content = note.content if hasattr(note, 'content') else {}
+            if not content:
+                continue
+            
+            # Exclude obvious non-reviews
+            if len(content) == 1 and ('comment' in content or 'rebuttal' in content):
+                continue  # Just a comment or rebuttal, not a full review
+            
+            # Include if it has rating-like fields
+            score_fields = {'rating', 'overall_recommendation', 'score', 'recommendation'}
+            if any(field in content for field in score_fields):
+                reviews.append(note)
+            # Or if it's a comprehensive review (many fields including summary)
+            elif 'summary' in content and len(content) >= 5:
+                reviews.append(note)
         
         ratings = []
         confidences = []
         review_list = []
         
-        # Process each review
+        # Process each review - extract ALL detected fields
         for review in reviews:
-            rating = review.content.get("rating", {})
+            review_data = {}
+            
+            # Extract every field that was detected
+            for field_name in detected_fields:
+                field_value = review.content.get(field_name, None)
+                
+                if field_value is not None:
+                    # Handle different value formats
+                    if isinstance(field_value, dict):
+                        # OpenReview often wraps values in {"value": ...}
+                        actual_value = field_value.get("value", "")
+                    else:
+                        actual_value = field_value
+                    
+                    # Store if not empty (but keep 0 values)
+                    if actual_value or actual_value == 0:
+                        review_data[field_name] = str(actual_value)
+            
+            review_list.append(review_data)
+            
+            # Parse rating for statistics
+            # Different conferences use different fields:
+            # - NeurIPS/ICLR: 'rating' (format: "8: accept" -> 8.0)
+            # - ICML: 'overall_recommendation' (format: {"value": 3} -> 3.0)
+            rating_value = None
+            for rating_field in ['rating', 'overall_recommendation', 'score', 'recommendation']:
+                rating = review.content.get(rating_field, {})
+                if isinstance(rating, dict) and "value" in rating:
+                    try:
+                        # Handle both string ("8: accept") and numeric (3) formats
+                        val = rating["value"]
+                        if isinstance(val, (int, float)):
+                            rating_value = float(val)
+                        else:
+                            rating_value = float(str(val).split(":")[0].strip())
+                        ratings.append(rating_value)
+                        break  # Found a rating, stop searching
+                    except (ValueError, IndexError, TypeError):
+                        pass
+            
+            # Parse confidence for statistics (format: "4: confident" -> 4.0)
             confidence = review.content.get("confidence", {})
-            
-            # Parse rating (format: "8: accept" -> 8.0)
-            if isinstance(rating, dict) and "value" in rating:
-                try:
-                    rating_value = float(str(rating["value"]).split(":")[0].strip())
-                    ratings.append(rating_value)
-                except (ValueError, IndexError):
-                    pass
-            
-            # Parse confidence (format: "4: confident" -> 4.0)
             if isinstance(confidence, dict) and "value" in confidence:
                 try:
-                    confidence_value = float(str(confidence["value"]).split(":")[0].strip())
+                    val = confidence["value"]
+                    if isinstance(val, (int, float)):
+                        confidence_value = float(val)
+                    else:
+                        confidence_value = float(str(val).split(":")[0].strip())
                     confidences.append(confidence_value)
-                except (ValueError, IndexError):
+                except (ValueError, IndexError, TypeError):
                     pass
-            
-            # Build review dictionary
-            review_list.append({
-                "rating": str(rating.get("value", "N/A")),
-                "confidence": str(confidence.get("value", "N/A")),
-                "summary": review.content.get("summary", {}).get("value", ""),
-                "strengths": review.content.get("strengths", {}).get("value", ""),
-                "weaknesses": review.content.get("weaknesses", {}).get("value", ""),
-            })
         
         # Extract decision
         decisions = [
@@ -206,8 +355,16 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
             metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
             logger.info(f"Cached: {metadata['total_papers']} papers from {metadata['fetch_date']}")
             logger.info(f"File size: {metadata['file_size_mb']:.2f} MB")
-        logger.info("Use this cache by running the agent with any keywords")
-        logger.info("To re-download, use --force flag")
+            
+            # Show detected fields if available
+            if "detected_review_fields" in metadata:
+                num_fields = len(metadata["detected_review_fields"])
+                logger.info(f"Review fields: {num_fields} fields detected")
+                logger.debug(f"Fields: {', '.join(metadata['detected_review_fields'][:10])}...")
+        
+        logger.info("")
+        logger.info("✓ Use this cache by running the agent with any keywords")
+        logger.info("✓ To re-download, use --force flag")
         return
     
     # Display header
@@ -221,7 +378,18 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
     client = openreview.api.OpenReviewClient(baseurl="https://api2.openreview.net")
     venue_id = f"{venue}.cc/{year}/Conference"
     
+    # Step 1: Detect all available review fields
+    logger.info("")
+    logger.info("=" * 80)
+    logger.info("STEP 1: Detecting Review Fields")
+    logger.info("=" * 80)
+    detected_fields = detect_all_review_fields(client, venue_id, num_samples=3)
+    logger.info("")
+    
     # Fetch all submissions with retry logic
+    logger.info("=" * 80)
+    logger.info("STEP 2: Fetching Paper Submissions")
+    logger.info("=" * 80)
     logger.info("Connecting to OpenReview API...")
     max_retries = 5
     retry_delay = 10  # seconds
@@ -287,7 +455,10 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
             temp_file.unlink()
             logger.debug(f"Cleaned up: {temp_file.name}")
     
-    logger.info("Processing papers with review data...")
+    logger.info("")
+    logger.info("=" * 80)
+    logger.info("STEP 3: Processing Papers with Review Data")
+    logger.info("=" * 80)
     logger.info("Progress will be saved every 100 papers to handle interruptions")
     if resume_from > 0:
         logger.info(f"Resuming from paper #{resume_from + 1}")
@@ -332,8 +503,8 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
         # This ensures we stay under the API rate limit
         time.sleep(1.2)
         
-        # Fetch review data
-        review_data = fetch_paper_reviews(client, submission.id)
+        # Fetch review data with dynamic field extraction
+        review_data = fetch_paper_reviews_dynamic(client, submission.id, detected_fields)
         request_count += 1
         
         # Build complete paper info
@@ -379,7 +550,7 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
     papers_with_reviews = sum(1 for p in papers if p.get("rating_avg") is not None)
     avg_rating = sum(p["rating_avg"] for p in papers if p.get("rating_avg") is not None) / papers_with_reviews if papers_with_reviews > 0 else 0
     
-    # Save metadata
+    # Save metadata with detected fields
     metadata = {
         "venue": venue,
         "year": year,
@@ -389,6 +560,9 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
         "fetch_date": datetime.now().isoformat(),
         "file_size_mb": papers_file.stat().st_size / 1024 / 1024,
         "includes_review_data": True,
+        # Dynamic field detection results
+        "detected_review_fields": sorted(detected_fields),
+        "num_detected_fields": len(detected_fields),
     }
     metadata_file.write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2),
@@ -401,15 +575,25 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
         logger.debug(f"Cleaned up: {temp_file.name}")
     
     # Display completion summary
+    logger.success("")
+    logger.success("=" * 80)
+    logger.success("✓ DATA FETCH COMPLETE!")
     logger.success("=" * 80)
     logger.success(f"✓ Saved {len(papers)} papers to {papers_file}")
     logger.success(f"✓ Papers with reviews: {papers_with_reviews} ({papers_with_reviews/len(papers)*100:.1f}%)")
     logger.success(f"✓ Average rating: {avg_rating:.2f}/10")
     logger.success(f"✓ File size: {metadata['file_size_mb']:.2f} MB")
+    logger.success(f"✓ Detected {len(detected_fields)} review fields")
     logger.success(f"✓ Metadata: {metadata_file}")
     logger.success("=" * 80)
-    logger.info("You can now run the agent with any keywords for instant filtering!")
-    logger.info("All review data is cached locally - no more API rate limits!")
+    logger.info("")
+    logger.info("📊 Detected Review Fields:")
+    for i in range(0, len(sorted(detected_fields)), 4):
+        fields_row = sorted(detected_fields)[i:i+4]
+        logger.info(f"  • {' | '.join(f'{f:25s}' for f in fields_row)}")
+    logger.info("")
+    logger.success("🎉 You can now run the agent with any keywords for instant filtering!")
+    logger.success("🎉 All review data is cached locally - no more API rate limits!")
 
 
 def main() -> None:
