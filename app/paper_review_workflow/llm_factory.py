@@ -13,6 +13,7 @@ def create_chat_openai(
     """Create ChatOpenAI instance with appropriate parameters for the model.
     
     GPT-5 series requires 'max_completion_tokens' instead of 'max_tokens'.
+    GPT-5 models are reasoning models and need more tokens (reasoning + output).
     
     Args:
     ----
@@ -27,11 +28,17 @@ def create_chat_openai(
         ChatOpenAI instance configured for the specified model
     """
     # GPT-5 series uses max_completion_tokens instead of max_tokens
+    # and needs more tokens for reasoning + actual output
     if model.startswith("gpt-5"):
+        # GPT-5 models are reasoning models - they need significantly more tokens
+        # Original max_tokens is for output, but GPT-5 uses tokens for reasoning too
+        # Multiply by 4-5x to ensure enough tokens for both reasoning and output
+        adjusted_tokens = max_tokens * 5
+        
         return ChatOpenAI(
             model=model,
             temperature=temperature,
-            max_completion_tokens=max_tokens,
+            max_completion_tokens=adjusted_tokens,
             timeout=timeout,
             **kwargs
         )
