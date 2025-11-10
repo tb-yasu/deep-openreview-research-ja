@@ -56,7 +56,7 @@ def parse_arguments() -> argparse.Namespace:
   # 詳細設定
   python run_paper_review.py --venue NeurIPS --year 2025 \\
     --research-description "グラフ生成と創薬への応用に興味があります" \\
-    --top-k 50 --min-relevance-score 0.3 --model gpt-4o
+    --top-k 50 --min-relevance-score 0.3 --model gpt-5-nano
         """,
     )
     
@@ -123,9 +123,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-4o-mini",
-        choices=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
-        help="使用するLLMモデル（デフォルト: gpt-4o-mini）",
+        default="gpt-5-nano",
+        choices=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-5", "gpt-5-mini", "gpt-5-nano"],
+        help="使用するLLMモデル（デフォルト: gpt-5-nano）",
     )
     parser.add_argument(
         "--temperature",
@@ -182,6 +182,9 @@ def get_llm_model(model_name: str) -> LLMModel:
         "gpt-4o": LLMModel.GPT4O,
         "gpt-4o-mini": LLMModel.GPT4O_MINI,
         "gpt-4-turbo": LLMModel.GPT4_TURBO,
+        "gpt-5": LLMModel.GPT5,
+        "gpt-5-mini": LLMModel.GPT5_MINI,
+        "gpt-5-nano": LLMModel.GPT5_NANO,
     }
     return model_map.get(model_name, LLMModel.GPT4O_MINI)
 

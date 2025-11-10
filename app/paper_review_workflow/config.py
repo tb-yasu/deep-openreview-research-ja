@@ -11,6 +11,9 @@ class LLMModel(str, Enum):
     GPT4O_MINI = "gpt-4o-mini"
     GPT4O = "gpt-4o"
     GPT4_TURBO = "gpt-4-turbo"
+    GPT5 = "gpt-5"
+    GPT5_MINI = "gpt-5-mini"
+    GPT5_NANO = "gpt-5-nano"
 
 
 class LLMConfig:

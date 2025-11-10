@@ -230,18 +230,18 @@ def fetch_paper_reviews_dynamic(
             rating_value = None
             for rating_field in ['rating', 'overall_recommendation', 'score', 'recommendation']:
                 rating = review.content.get(rating_field, {})
-                if isinstance(rating, dict) and "value" in rating:
-                    try:
+            if isinstance(rating, dict) and "value" in rating:
+                try:
                         # Handle both string ("8: accept") and numeric (3) formats
                         val = rating["value"]
                         if isinstance(val, (int, float)):
                             rating_value = float(val)
                         else:
                             rating_value = float(str(val).split(":")[0].strip())
-                        ratings.append(rating_value)
+                    ratings.append(rating_value)
                         break  # Found a rating, stop searching
                     except (ValueError, IndexError, TypeError):
-                        pass
+                    pass
             
             # Parse confidence for statistics (format: "4: confident" -> 4.0)
             confidence = review.content.get("confidence", {})
@@ -398,8 +398,8 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
     for attempt in range(max_retries):
         try:
             logger.info(f"Fetching submissions (attempt {attempt + 1}/{max_retries})...")
-            submissions = client.get_all_notes(
-                invitation=f"{venue_id}/-/Submission",
+    submissions = client.get_all_notes(
+        invitation=f"{venue_id}/-/Submission",
             )
             logger.success(f"Successfully fetched {len(submissions)} submissions")
             break
