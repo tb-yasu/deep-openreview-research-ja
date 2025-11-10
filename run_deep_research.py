@@ -186,7 +186,7 @@ def get_llm_model(model_name: str) -> LLMModel:
         "gpt-5-mini": LLMModel.GPT5_MINI,
         "gpt-5-nano": LLMModel.GPT5_NANO,
     }
-    return model_map.get(model_name, LLMModel.GPT4O_MINI)
+    return model_map.get(model_name, LLMModel.GPT5_NANO)
 
 
 def run_paper_review(args: argparse.Namespace) -> None:

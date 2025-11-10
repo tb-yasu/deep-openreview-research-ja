@@ -4,7 +4,6 @@ import json
 import re
 from typing import Any
 
-from langchain_openai import ChatOpenAI
 from loguru import logger
 
 from app.paper_review_workflow.models.state import (
@@ -22,6 +21,7 @@ from app.paper_review_workflow.constants import (
     MAX_AUTHORS_DISPLAY,
     MAX_KEYWORDS_DISPLAY,
 )
+from app.paper_review_workflow.llm_factory import create_chat_openai
 
 
 class UnifiedLLMEvaluatePapersNode:
@@ -50,7 +50,7 @@ class UnifiedLLMEvaluatePapersNode:
         model_name = self.llm_config.model.value
         
         if model_name.startswith("gpt"):
-            return ChatOpenAI(
+            return create_chat_openai(
                 model=model_name,
                 temperature=self.llm_config.temperature,
                 max_tokens=self.llm_config.max_tokens,
@@ -85,6 +85,13 @@ class UnifiedLLMEvaluatePapersNode:
                 # LLMに評価を依頼（1回の呼び出し）
                 response = self.llm.invoke(prompt)
                 response_text = response.content
+                
+                # レスポンスが空の場合の詳細ログ
+                if not response_text or len(response_text.strip()) == 0:
+                    logger.error(f"  ❌ Empty response from LLM for paper: {paper.title[:50]}")
+                    logger.error(f"     Model: {self.llm_config.model.value}")
+                    logger.error(f"     Response object: {response}")
+                    raise ValueError("Empty response from LLM")
                 
                 # レスポンスをパース
                 evaluation = self._parse_llm_response(response_text)
@@ -312,7 +319,7 @@ class UnifiedLLMEvaluatePapersNode:
             }
         except Exception as e:
             logger.warning(f"Failed to parse LLM response: {e}")
-            logger.debug(f"Response: {response[:300]}...")
+            logger.warning(f"Full response: {response[:500]}...")
             # パース失敗時はデフォルト値
             return {
                 'relevance': 0.5,
