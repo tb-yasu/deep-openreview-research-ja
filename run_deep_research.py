@@ -103,8 +103,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--max-papers",
         type=int,
-        default=9999,
-        help="検索する最大論文数（デフォルト: 9999）",
+        default=15000,
+        help="検索する最大論文数（デフォルト: 15000）",
     )
     parser.add_argument(
         "--focus-on-novelty",
@@ -119,13 +119,13 @@ def parse_arguments() -> argparse.Namespace:
         help="インパクトを重視（デフォルト: True）",
     )
     
-    # LLM設定
+    # LLM設定f
     parser.add_argument(
         "--model",
         type=str,
-        default="gpt-5-nano",
+        default="gpt-4o-mini",
         choices=["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-5", "gpt-5-mini", "gpt-5-nano"],
-        help="使用するLLMモデル（デフォルト: gpt-5-nano）",
+        help="使用するLLMモデル（デフォルト: gpt-4o-mini）",
     )
     parser.add_argument(
         "--temperature",
