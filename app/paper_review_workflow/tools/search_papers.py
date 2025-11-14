@@ -20,14 +20,30 @@ from app.paper_review_workflow.tools.cache_manager import CacheManager
 _cache_manager = CacheManager(cache_dir="storage/cache", ttl_hours=24)
 
 
+def is_accepted(paper: dict[str, Any]) -> bool:
+    """論文が採択されているか判定.
+    
+    Args:
+    ----
+        paper: 論文情報の辞書
+        
+    Returns:
+    -------
+        bool: 採択されている場合True、それ以外False
+    """
+    decision = paper.get("decision", "").lower()
+    return "accept" in decision
+
+
 @tool
 def search_papers(
     venue: str,
     year: int,
     keywords: str | None = None,
     max_results: int = 100,
+    accepted_only: bool = True,
 ) -> str:
-    """OpenReview APIを使用して、指定された学会・年の採択論文を検索します.
+    """OpenReview APIを使用して、指定された学会・年の論文を検索します.
 
     Args:
     ----
@@ -35,6 +51,7 @@ def search_papers(
         year (int): 開催年（例: 2024）
         keywords (str, optional): 検索キーワード（論文タイトルやアブストラクトで絞り込み）
         max_results (int): 最大取得件数（デフォルト: 100）
+        accepted_only (bool): 採択論文のみを検索（デフォルト: True）
 
     Returns:
     -------
@@ -59,9 +76,17 @@ def search_papers(
             logger.info(f"Loading from local papers data: {papers_file}")
             all_papers = json.loads(papers_file.read_text(encoding="utf-8"))
             
-            # キーワードでフィルタリング
+            # キーワードと採択状況でフィルタリング
             filtered_papers: list[dict[str, Any]] = []
+            skipped_rejected = 0
+            
             for paper in all_papers:
+                # 採択論文のみをフィルタ（accepted_only=True の場合）
+                if accepted_only and not is_accepted(paper):
+                    skipped_rejected += 1
+                    continue
+                
+                # キーワードでフィルタリング
                 if keywords:
                     title_match = keywords.lower() in paper["title"].lower()
                     abstract_match = keywords.lower() in paper["abstract"].lower()
@@ -73,7 +98,11 @@ def search_papers(
                 if len(filtered_papers) >= max_results:
                     break
             
-            logger.info(f"Found {len(filtered_papers)} papers (filtered from {len(all_papers)} total)")
+            filter_msg = f"Found {len(filtered_papers)} papers (filtered from {len(all_papers)} total)"
+            if accepted_only and skipped_rejected > 0:
+                filter_msg += f", skipped {skipped_rejected} rejected papers"
+            logger.info(filter_msg)
+            
             return json.dumps(filtered_papers, ensure_ascii=False, indent=2)
         
         # ローカルキャッシュがない場合は従来のキャッシュをチェック

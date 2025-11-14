@@ -199,6 +199,11 @@ class PaperReviewAgentInputState(BaseModel):
         title="最大論文数",
         description="検索する最大論文数",
     )
+    accepted_only: bool = Field(
+        default=True,
+        title="採択論文のみ",
+        description="採択論文のみを検索対象にする（デフォルト: True）",
+    )
     evaluation_criteria: EvaluationCriteria = Field(
         default_factory=EvaluationCriteria,
         title="評価基準",

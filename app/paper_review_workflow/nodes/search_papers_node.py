@@ -34,9 +34,10 @@ class SearchPapersNode:
         -------
             更新された状態の辞書
         """
+        accepted_status = "採択論文のみ" if state.accepted_only else "全論文（採択・不採択含む）"
         logger.info(
             f"Searching papers from {state.venue} {state.year} "
-            f"(max: {state.max_papers}, keywords: {state.keywords})"
+            f"(max: {state.max_papers}, keywords: {state.keywords}, {accepted_status})"
         )
         
         try:
@@ -46,6 +47,7 @@ class SearchPapersNode:
                 "year": state.year,
                 "keywords": state.keywords,
                 "max_results": state.max_papers,
+                "accepted_only": state.accepted_only,
             })
             
             # 結果をパース

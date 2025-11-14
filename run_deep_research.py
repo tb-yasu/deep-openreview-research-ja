@@ -107,6 +107,12 @@ def parse_arguments() -> argparse.Namespace:
         help="検索する最大論文数（デフォルト: 15000）",
     )
     parser.add_argument(
+        "--include-rejected",
+        action="store_true",
+        default=False,
+        help="不採択論文も検索対象に含める（デフォルト: 採択論文のみ）",
+    )
+    parser.add_argument(
         "--focus-on-novelty",
         action="store_true",
         default=True,
@@ -221,6 +227,7 @@ def run_paper_review(args: argparse.Namespace) -> None:
             year=args.year,
             keywords=None,  # 同義語マッチングを活用
             max_papers=args.max_papers,
+            accepted_only=not args.include_rejected,  # デフォルトで採択論文のみ
             evaluation_criteria=EvaluationCriteria(
                 research_description=research_description,
                 research_interests=research_interests,
@@ -243,6 +250,7 @@ def run_paper_review(args: argparse.Namespace) -> None:
         logger.info(f"   LLMモデル: {args.model}")
         logger.info(f"   最小関連性スコア: {args.min_relevance_score}")
         logger.info(f"   最大論文数: {args.max_papers}")
+        logger.info(f"   検索対象: {'全論文（採択・不採択含む）' if args.include_rejected else '採択論文のみ'}")
         if not args.no_llm_eval:
             logger.info(f"   LLM評価対象: 上位{args.top_k}件")
         else:
