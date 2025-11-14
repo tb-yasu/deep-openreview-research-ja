@@ -1,347 +1,195 @@
-# 数千の論文から"あなただけの宝物"を発見する - Deep OpenReview Researchのご紹介
+# 国際会議論文の効率的な発見・分析のための Deep OpenReview Research を公開しました
 
-## はじめに - 膨大な論文の海で溺れていませんか？
+## この記事でわかること
 
-毎年、OpenReview上では様々な国際会議で論文がレビューされ、数千から数万の論文が採択されています。
+- 数千件の採択論文から研究に本当に関連する論文を見つける方法
+- 従来のキーワード検索では難しかった「深い論文分析」の概要
+- AIによる論文評価とレビュー情報活用の具体像
 
-その数は驚くべきものです：
+## 問題：膨大な論文の中で重要な研究を見逃している
 
-- **NeurIPS 2025**: 5,290件の採択論文
-- **ICLR 2024**: 3,704件の採択論文  
-- **ICML 2024**: 3,260件の採択論文
+AI分野の主要国際会議では、毎年膨大な数の論文が採択されています。
 
-これらの論文は、世界中の研究者が何ヶ月、時には何年もかけて取り組んできた研究成果です。しかし、残念なことに、**ほとんどの論文が読まれずに埋もれてしまう**のが現実です。
+- **NeurIPS 2025**: 5,290件
+- **ICLR 2025**: 3,704件
+- **ICML 2025**: 3,260件
 
-あなたの研究テーマに最も関連する画期的な論文が、タイトルやキーワードが少し異なるだけで、検索結果の奥深くに埋もれているかもしれません。グラフ生成に興味がある研究者が、"molecular graph synthesis"というキーワードで書かれた創薬の革新的な論文を見逃してしまう…そんなことが日常的に起こっています。
+これらは世界中の研究者が何ヶ月もかけて取り組んできた成果ですが、**ほとんどの論文が読まれずに埋もれてしまう**のが現実です。
 
-**この問題を解決するために、私たちは「Deep OpenReview Research」を開発しました。**
+**従来のキーワード検索の限界：**
 
-## Deep OpenReview Researchとは？
+研究者Aは「graph generation（グラフ生成）」に興味がありますが、重要な論文が「latent space controlled molecular graph synthesis」というタイトルで投稿されている場合、単純なキーワード検索だけでは見つからないことがあります。
 
-**Deep OpenReview Research** は、AIを活用した論文発見・分析エージェントです。OpenReview APIと大規模言語モデル（LLM）を組み合わせることで、あなたの研究興味に真に関連する論文を自動的に発見し、ランク付けします。
+さらに、OpenReviewには各論文に対する Meta Review や Decision Comment などの価値ある情報が含まれていますが、通常の検索ではこれらを十分に活用できません。
 
-### なぜ"Deep"なのか？
+この問題を解決するために、**Deep OpenReview Research**を開発しました。
 
-従来の論文検索ツールは、キーワードマッチングに頼っています。しかし、Deep OpenReview Researchは「深い」分析を行います：
+## 解決策：Deep OpenReview Research
 
-1. **深い意味理解** - LLMが論文の内容を理解し、表面的なキーワードマッチングを超えた関連性を評価
-2. **深いレビュー情報の抽出** - Meta Review、レビューコメント、採択理由、著者コメントまで分析
-3. **深い評価軸** - 関連性だけでなく、新規性・インパクト・実用性を多角的に評価
+OpenReview上の採択論文を対象とした、AIを活用した論文発見・分析エージェントです。OpenReview APIとLLMを組み合わせ、研究興味に関連する論文を自動的に発見し、ランク付けしたうえでレポートとして出力します。
+
+### "Deep"が意味する3つの深さ
+
+| 従来の検索 | Deep OpenReview Research |
+|-----------|-------------------------|
+| **キーワード完全一致** | **意味理解による検索**<br>LLMが同義語を自動生成（"graph generation"→"molecular graph synthesis"など数十の関連表現）し、表記揺れで見逃していた論文を発見 |
+| **タイトルとAbstractのみ** | **レビュー情報の深い分析**<br>Meta Review・Decision Comment・レビュースコア・著者応答まで解析。なぜAcceptされたかを理解 |
+| **関連性のみで評価** | **多軸評価**<br>関連性・新規性・インパクト・実用性の4軸で総合評価。研究目的に応じた優先順位付けが可能 |
 
 ## 主な機能
 
-### 🔍 1. 自然言語での研究興味の記述
+### 1. 自然言語で研究興味を指定
 
-堅苦しいキーワードリストは不要です。自然な文章で研究興味を伝えるだけ：
-
-```bash
-python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
-  --research-description "グラフ生成に強い興味があります。関連して創薬への応用に興味があります"
-```
-
-### 🔑 2. 同義語自動展開で検索範囲を拡大
-
-AIが自動的にキーワードの同義語を生成。"graph generation"から"molecular graph synthesis"、"de novo drug design"まで、関連する様々な表現で論文を検索します。
-
-**例：** "graph generation"というキーワードから：
-- graph synthesis
-- molecular graph generation
-- de novo graph design
-- structure generation
-- graph construction
-
-など、数十の同義語を自動生成し、見逃しを防ぎます。
-
-### 🤖 3. 統合LLM評価による多角的分析
-
-1回のLLM呼び出しで、以下の4つの観点から論文を評価：
-
-- **関連性スコア** - あなたの研究興味との関連度
-- **新規性スコア** - 研究の独創性
-- **インパクトスコア** - 学術的・実用的インパクト
-- **実用性スコア** - 実装の実現可能性
-
-### 📊 4. OpenReviewの詳細情報を完全活用
-
-論文のタイトルと概要だけでなく、以下の情報も分析：
-
-- **Meta Review** - エリアチェアによる総合評価
-- **レビューコメント** - 各レビューワーの詳細な評価
-- **採択理由（Decision Comment）** - Program Chairsによる採択判定の理由
-- **レビュースコアの平均** - 各評価項目の数値データ
-- **発表形式** - Oral/Spotlight/Posterの区別
-- **著者コメント** - レビューへの著者の応答
-
-### 📝 5. 詳細なMarkdownレポート生成
-
-すべての分析結果を、読みやすいMarkdown形式のレポートとして出力。研究メモとしてそのまま使えます。
-
-## 実際の使用例
-
-### ケース1: 基礎研究者の論文調査
-
-グラフ生成を研究している博士課程学生のケース：
+キーワードリストではなく、自然な文章で研究興味を記述できます。
 
 ```bash
 python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
-  --research-description "グラフニューラルネットワークによる分子グラフ生成と、創薬への応用に興味があります。特に生成モデルの制御性と、生成された分子の物性予測に関心があります。"
+  --venue NeurIPS --year 2025 \
+  --research-description "グラフ生成と創薬への応用に興味があります"
 ```
 
-**結果：** 5,290件の論文から、研究興味に関連する上位100件を抽出し、LLMによる詳細評価を実施。最終的に、真に関連性の高い論文トップ50をランク付けしたレポートを生成。
+### 2. LLMによる4軸評価
 
-### ケース2: 企業研究者の技術調査
+1回のLLM呼び出しで、関連性・新規性・インパクト・実用性の4つの観点から論文を評価します。これにより、「面白いが実用性が低い論文」と「実装しやすいが新規性が低い論文」を区別しやすくなります。
 
-効率的なLLMの実装を探している機械学習エンジニアのケース：
+### 3. OpenReviewのレビュー情報を完全活用
+
+Meta Review、Decision Comment、レビュースコア、著者応答、発表形式（Oral/Spotlight/Poster）まで分析し、なぜその論文がAcceptされたかを理解できます。
+
+### 4. 自動レポート生成
+
+すべての分析結果をMarkdown形式のレポートとして出力。研究メモとして活用できます。
+
+## 使用例
+
+### ケース1: 分子グラフ生成の研究調査
 
 ```bash
 python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
-  --research-description "大規模言語モデルの効率化技術に興味があります。特に量子化、プルーニング、蒸留などの圧縮手法と、推論時の高速化技術を調査しています。"
-  --focus-on-practicality \
-  --model gpt-4o
+  --venue NeurIPS --year 2025 \
+  --research-description "分子グラフ生成と創薬への応用に興味があります"
 ```
 
-**結果：** 実用性を重視した評価により、すぐに実装できる技術論文を優先的に発見。
+**結果：** 5,290件から関連上位100件を抽出しLLM評価。真に関連性の高い論文トップ50をランク付けしたレポートを生成。
 
-### ケース3: 高速スクリーニング
-
-多数の論文を素早くスクリーニングしたい場合：
+### ケース2: LLM効率化技術の調査
 
 ```bash
 python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
-  --research-interests "reinforcement learning,robotics,sim-to-real" \
-  --no-llm-eval \
-  --top-n-display 30
+  --venue NeurIPS --year 2025 \
+  --research-description "LLMの量子化や推論高速化技術"
 ```
 
-**結果：** LLM評価をスキップし、キーワードベースの高速検索で関連論文を素早く発見。
+**結果：** 実用性を重視した評価により、実装可能な技術論文を優先的に発見。
 
-## ワークフローの全体像
+## 処理フロー
 
-Deep OpenReview Researchは、以下の7つのステップで論文を分析します：
-
-```
-1. キーワード収集
-   ↓ 自然言語から研究キーワードを抽出
-   
-2. 同義語生成
-   ↓ LLMが各キーワードの同義語を生成
-   
-3. 論文検索
-   ↓ OpenReview APIで論文データを取得
-   
-4. 初期評価
-   ↓ キーワードマッチングで関連性スコアを計算
-   
-5. ランキング
-   ↓ 上位k件を選択（デフォルト100件）
-   
-6. 統合LLM評価
-   ↓ 関連性・新規性・インパクト・実用性を評価
-   ↓ Meta Review、レビューコメントも分析
-   
-7. 最終ランキングとレポート生成
-   ↓ 最も価値の高い論文をランク付け
-```
+1. 自然言語から研究キーワードを抽出
+2. LLMが同義語を自動生成
+3. OpenReview APIで論文を検索
+4. キーワードマッチングで初期フィルタリング
+5. 上位k件（デフォルト100件）をLLMで多軸評価
+6. 最終スコアでランク付けしレポート生成
 
 ## 出力レポートの例
 
-生成されるレポートには、以下のような情報が含まれます：
-
 ```markdown
-# 論文レビューレポート - NeurIPS 2025
+# 【第1位】MolGen: Controllable Molecular Graph Generation
 
-## 【第1位】 MolGen: Controllable Molecular Graph Generation via Diffusion Models
+**スコア**
+- 最終スコア: 0.892
+- 関連性: 0.950 | 新規性: 0.850 | インパクト: 0.825 | 実用性: 0.850
+- レビュー平均: 8.2/10
 
-**著者**: John Smith, Jane Doe, ...
+**AI評価**
+グラフ生成と創薬応用の両方において高い関連性。拡散モデルを用いた
+制御可能な分子生成という新規性の高いアプローチを提案...
 
-**キーワード**: graph generation, molecular design, diffusion models, drug discovery
+**採択理由（Decision Comment）**
+Significant contribution to molecular design. Oral presentation.
 
-### 概要
-This paper presents MolGen, a novel approach for controllable molecular graph 
-generation using diffusion models...
-
-### スコア
-
-| 項目 | スコア |
-|------|--------|
-| **最終スコア** | **0.892** |
-| OpenReview総合 | 0.875 |
-| 　├ 関連性 | 0.950 |
-| 　├ 新規性 | 0.850 |
-| 　└ インパクト | 0.825 |
-| AI評価（関連性） | 0.920 |
-| AI評価（新規性） | 0.880 |
-| AI評価（実用性） | 0.850 |
-| レビュー平均 | 8.2/10 |
-
-### 🤖 AI評価
-
-この論文は、グラフ生成と創薬応用の両方において高い関連性を持ちます。
-拡散モデルを用いた制御可能な分子生成という新規性の高いアプローチを提案し...
-
-### 📊 レビュー要約
-
-4名のレビューワーが本論文を評価しました。全員が手法の独創性と実験結果の
-説得力を高く評価しています。特に、生成された分子の多様性と物性制御の...
-
-### 📝 採択理由（Decision Comment）
-
-This paper presents a significant contribution to the field of molecular design.
-The Area Chair recommends acceptance as an Oral presentation...
-
-### 発表形式
-🎤 Oral Presentation（口頭発表） - トップ1%の論文のみが選ばれる栄誉
-
-### リンク
-- OpenReview: https://openreview.net/forum?id=...
-- PDF: https://openreview.net/pdf?id=...
+**発表形式**: Oral Presentation（最上位クラスの論文）
 ```
 
 ## 技術スタック
 
-- **Python 3.12+**
-- **LangGraph/LangChain** - LLMアプリケーションフレームワーク
-- **OpenAI GPT-4** - 論文の意味理解と評価
-- **OpenReview API** - 論文データとレビュー情報の取得
-- **Pydantic** - データ検証と型安全性
+Python 3.12+、LangGraph/LangChain、OpenAI GPT-4、OpenReview API
 
 ## 始め方
 
-わずか5ステップで開始できます：
-
 ```bash
-# 1. クローン
 git clone https://github.com/tb-yasu/deep-openreview-research-ja.git
 cd deep-openreview-research-ja
-
-# 2. 仮想環境とパッケージ
-python -m venv venv
-source venv/bin/activate
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. OpenAI APIキーを設定
+# .envファイルにOpenAI APIキーを設定
 cp .env.example .env
-# .envファイルを編集してAPIキーを設定
 
-# 4. 論文データを取得（初回のみ、60-90分）
+# 論文データを取得（初回のみ。環境にもよりますが目安として60〜90分程度）
 python fetch_all_papers.py --venue NeurIPS --year 2025
 
-# 5. 実行！
+# 実行
 python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
+  --venue NeurIPS --year 2025 \
   --research-description "あなたの研究興味"
 ```
 
-## より高度な使い方
+詳細な設定オプションは[GitHubリポジトリ（日本語版）](https://github.com/tb-yasu/deep-openreview-research-ja)を参照してください。
 
-### カスタマイズ可能なパラメータ
+英語版のリポジトリは[こちら](https://github.com/tb-yasu/deep-openreview-research)です。
 
-```bash
-python run_deep_research.py \
-  --venue NeurIPS \
-  --year 2025 \
-  --research-description "あなたの研究興味" \
-  --top-k 50 \              # LLM評価する論文数
-  --min-relevance-score 0.3 \  # 関連性の最低スコア
-  --model gpt-4o \          # より高性能なモデルを使用
-  --focus-on-novelty \      # 新規性を重視
-  --focus-on-impact \       # インパクトを重視
-  --top-n-display 20        # レポートに含める論文数
-```
+## 他ツールとの違い
 
-### 複数の学会を横断調査
+| 機能 | Google Scholar | Semantic Scholar | Deep OpenReview Research |
+|------|---------------|------------------|-------------------------|
+| 同義語自動生成 | × | × | ○ |
+| レビュー情報解析 | × | × | ○ |
+| 多軸評価 | × | △（簡易な指標のみ） | ○（関連性・新規性・インパクト・実用性） |
+| 採択理由の分析 | × | × | ○ |
+| カスタムレポート生成 | × | × | ○ |
 
-```bash
-# NeurIPS 2025
-python run_deep_research.py --venue NeurIPS --year 2025 --research-description "..."
+Deep OpenReview ResearchはOpenReview APIを完全活用し、Meta ReviewやDecision Commentなど、採択プロセスの深い情報まで分析する点が最大の特徴です。
 
-# ICML 2024
-python run_deep_research.py --venue ICML --year 2024 --research-description "..."
+## 活用シーン
 
-# ICLR 2024
-python run_deep_research.py --venue ICLR --year 2024 --research-description "..."
-```
+- **文献レビュー**: 論文執筆時の関連研究調査を効率化
+- **技術調査**: 実装可能性を重視した論文の発見
+- **研究動向把握**: 複数年・複数会議の横断調査
+- **論文輪読選定**: Oral/Spotlightなど発表形式も参考に選定
 
-年を跨いだトレンド分析も可能です。
+## FAQ
 
-## 実際のユースケース
+**Q: 処理時間とコストは？**
 
-### 📚 研究テーマの発見
-新しい研究テーマを探している研究者が、自分の専門分野に関連する最新の研究動向を把握。
+A: 100件の論文をGPT-4o-miniで評価する場合、プロンプト設計にもよりますが、目安として約5〜10分、$0.05〜0.1程度で動作するように設計しています。
 
-### 🔬 文献レビュー
-論文執筆時の関連研究調査を効率化。Meta ReviewやレビューコメントからAcceptされた理由も理解。
+**Q: オフライン使用は可能？**
 
-### 💡 技術調査
-新しい技術の実用可能性を評価。実装の詳細やベンチマーク結果を含む論文を優先的に発見。
+A: 論文データはローカルキャッシュされますが、LLM評価にはAPI接続が必要です。
 
-### 🎓 研究室の論文輪読選定
-研究室メンバーの興味に合った論文を選定。発表形式（Oral/Spotlight）も参考に。
+**Q: 対応学会は？**
 
-### 🏢 企業の技術動向調査
-競合技術や適用可能な最新手法を効率的に調査。実用性重視の評価軸でフィルタリング。
+A: NeurIPS、ICML、ICLRなどOpenReviewを使用する学会に対応。
 
-## よくある質問（FAQ）
+## まとめ
 
-**Q: LLM評価にはどれくらいの時間とコストがかかりますか？**
+年間数千件の採択論文から、研究に本当に関連する論文を見つけることは困難です。Deep OpenReview Researchは、以下の3つのアプローチでこの問題を解決します。
 
-A: 100件の論文をGPT-4o-miniで評価する場合、約5-10分、コストは$0.5-1程度です。top-kの値を調整することで、時間とコストをコントロールできます。
+1. **同義語自動生成による検索範囲の拡大** - キーワードの表記揺れによる見逃しを防止
+2. **レビュー情報の深い分析** - Meta ReviewやDecision Commentからなぜ採択されたかを理解
+3. **4軸評価による優先順位付け** - 関連性・新規性・インパクト・実用性で総合判断
 
-**Q: 日本語の論文には対応していますか？**
-
-A: 現在、OpenReview上の論文（主に英語）に対応しています。プロンプトは日本語でも英語でも指定可能です。
-
-**Q: オフラインで使用できますか？**
-
-A: 論文データは一度取得すればローカルにキャッシュされます。ただし、LLM評価にはOpenAI APIへの接続が必要です。
-
-**Q: 他の学会にも対応予定はありますか？**
-
-A: OpenReviewを使用している学会であれば対応可能です。現在はNeurIPS、ICML、ICLRに最適化されています。
-
-## まとめ - 研究時間を"探す"から"読む"へ
-
-Deep OpenReview Researchは、論文検索の時間を劇的に短縮します。膨大な論文の海から、あなたの研究に真に価値のある「宝物」を見つけ出すお手伝いをします。
-
-**従来の方法：**
-- ✗ キーワード検索で数百件ヒット
-- ✗ 手作業で1件ずつタイトルを確認
-- ✗ Abstractを読んでも関連性が不明
-- ✗ 結局、重要な論文を見逃す
-- ⏰ 数日かかる作業
-
-**Deep OpenReview Research：**
-- ✓ AI が意味を理解して関連論文を発見
-- ✓ 同義語展開で見逃しを防ぐ
-- ✓ Meta Reviewとレビューコメントまで分析
-- ✓ 新規性・インパクト・実用性で評価
-- ✓ 詳細レポートを自動生成
-- ⏰ 数分で完了
-
-研究時間を「論文を探す」ことから「論文を読む」ことへ。
-
-それが、Deep OpenReview Researchが目指す未来です。
+従来のキーワード検索では数日かかっていた論文調査を、数分から数十分のオーダーまで短縮することを目指しています。
 
 ---
 
-## リンク
+**リンク**
 
-- **GitHubリポジトリ**: https://github.com/tb-yasu/deep-openreview-research-ja
-- **ライセンス**: MIT License
-- **必要要件**: Python 3.12+, OpenAI API Key
+- GitHubリポジトリ（日本語版）: https://github.com/tb-yasu/deep-openreview-research-ja
+- GitHubリポジトリ（英語版）: https://github.com/tb-yasu/deep-openreview-research
+- ライセンス: MIT License
+- 必要要件: Python 3.12+, OpenAI API Key
 
----
-
-**今すぐ試して、あなただけの研究の宝物を発見しましょう！📚✨**
-
-ご質問やフィードバックは、[GitHub Issues](https://github.com/tb-yasu/openreview-agent-ja/issues)でお待ちしています。
+ご質問は各リポジトリのGitHub Issuesへ。
 

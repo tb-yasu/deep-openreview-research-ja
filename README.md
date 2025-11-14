@@ -2,7 +2,7 @@
 
 AIを活用した深い論文レビュー・分析エージェント
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
 ## 📋 概要
@@ -420,7 +420,24 @@ python run_deep_research.py ... --model gpt-4o-mini
 
 ## 📄 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルを参照してください。
+このプロジェクトは **CC BY-NC-SA 4.0（Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License）** の下で公開されています。
+
+### ✅ 許可されること
+- **学術・研究目的**での自由な使用
+- ソースコードの共有・改変
+- 個人的な学習・研究での利用
+
+### ❌ 禁止されること
+- **商用利用**（営利目的での使用）
+- このソフトウェアを使った有料サービスの提供
+- 商用製品への組み込み
+
+### 📋 条件
+- **表示** - 適切なクレジットを表示し、ライセンスへのリンクを提供
+- **継承** - 改変版も同じライセンスで配布
+- **非営利** - 営利目的での使用禁止
+
+商用利用をご希望の場合は、別途ライセンス契約が必要です。詳細は[LICENSE](LICENSE)ファイルを参照してください。
 
 ## 🙏 謝辞
 
