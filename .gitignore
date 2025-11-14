@@ -76,4 +76,10 @@ create_*_from_checkpoint.py
 examples.sh
 debug_*.py
 test_*.py
+blog_draft.md
+quickstart.sh
+
+# Development configuration files
+mypy.ini
+ruff.toml
 
