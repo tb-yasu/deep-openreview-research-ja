@@ -83,3 +83,7 @@ quickstart.sh
 mypy.ini
 ruff.toml
 
+# Internal documentation/notes (not for public repository)
+paper/
+docs/
+
