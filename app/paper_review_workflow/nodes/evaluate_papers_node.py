@@ -237,7 +237,7 @@ Rules:
 - **Output synonyms in ENGLISH only** (even if input topic is in another language)
 - **Include both singular and plural forms** (e.g., if topic is "ai agents", include both "ai agent" and "ai agents")
 - Common abbreviations (e.g., "llm" for "large language model")
-- Related terms (with both singular/plural forms where applicable)
+- Related terms
 - Alternative phrasings
 - Keep terms concise and technical
 """
