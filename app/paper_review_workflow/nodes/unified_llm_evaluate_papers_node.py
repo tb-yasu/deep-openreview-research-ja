@@ -234,6 +234,8 @@ class UnifiedLLMEvaluatePapersNode:
 
 # 📄 論文情報
 
+**学会**: {paper.venue} {paper.year}
+
 **タイトル**: {paper.title}
 
 **著者**: {', '.join(paper.authors[:MAX_AUTHORS_DISPLAY])}{'...' if len(paper.authors) > MAX_AUTHORS_DISPLAY else ''}
@@ -293,8 +295,8 @@ class UnifiedLLMEvaluatePapersNode:
 
 ## 6. フィールド活用の説明 (field_insights)
 どのレビューフィールドを主に使用したかを1-2文で説明：
-例: "ICMLのoverall_recommendationフィールド(平均3.0)とsummaryを主に参照しました"
-例: "NeurIPSのratingフィールド(平均5.5)とstrengths_and_weaknessesを主に参照しました"
+例: "{paper.venue}のoverall_recommendationフィールド(平均3.0)とsummaryを主に参照しました"
+例: "{paper.venue}のratingフィールド(平均5.5)とstrengths_and_weaknessesを主に参照しました"
 
 # 出力形式
 
@@ -306,7 +308,7 @@ class UnifiedLLMEvaluatePapersNode:
   "impact": 0.68,
   "practicality": 0.80,
   "review_summary": "レビューワーは手法の理論的堅牢性を高く評価。一方で実験の限定性を指摘。Program Chairsは新規性と実験品質のバランスから採択を推奨。",
-  "field_insights": "ICMLのoverall_recommendation(平均2.75)、theoretical_claims、experimental_designs_or_analysesフィールドを主に参照しました。",
+  "field_insights": "{paper.venue}のoverall_recommendation(平均2.75)、theoretical_claims、experimental_designs_or_analysesフィールドを主に参照しました。",
   "rationale": "この論文はグラフ生成に特化しており、ユーザーの興味に直接関連。新しい手法で実験も充実しているが、大規模データセットでの検証が限定的。"
 }}
 """
