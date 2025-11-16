@@ -182,7 +182,7 @@ python run_deep_research.py \
 
 | オプション | デフォルト | 説明 |
 |-----------|-----------|------|
-| `--model` | gpt-4o-mini | 使用するLLMモデル |
+| `--model` | gpt-5-nano | 使用するLLMモデル |
 | `--temperature` | 0.0 | LLM温度パラメータ（0.0-1.0） |
 | `--max-tokens` | 1000 | LLM最大トークン数 |
 
@@ -399,7 +399,7 @@ python run_deep_research.py ... --no-llm-eval
 # 評価対象論文数を減らす
 python run_deep_research.py ... --top-k 50
 
-# より高速なモデルを使用
+# より高性能なモデルを使用したい場合
 python run_deep_research.py ... --model gpt-4o-mini
 ```
 
@@ -426,7 +426,7 @@ LLM評価を並列実行することで、大幅な処理時間の短縮を実�
 
 ### APIコスト削減のヒント
 
-1. **小さいモデルを使用**: `gpt-4o-mini`は高速かつ低コスト
+1. **小さいモデルを使用**: デフォルトの`gpt-5-nano`が最速＆最安（より高性能が必要なら`gpt-4o-mini`）
 2. **top-kを絞る**: 評価する論文数を適切に制限（デフォルト: 30件）
 3. **キャッシュを活用**: 同じ学会・年・キーワードでの再実行はキャッシュを利用
 
