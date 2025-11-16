@@ -1,5 +1,6 @@
 """Unified LLM evaluation node - 1回の呼び出しで全評価を完結."""
 
+import asyncio
 import json
 import re
 from typing import Any
@@ -60,7 +61,7 @@ class UnifiedLLMEvaluatePapersNode:
             raise ValueError(f"Unsupported model: {model_name}. Only OpenAI GPT models are supported.")
     
     def __call__(self, state: PaperReviewAgentState) -> dict[str, Any]:
-        """統合LLM評価を実行.
+        """統合LLM評価を実行（並列処理版）.
         
         Args:
         ----
@@ -71,79 +72,141 @@ class UnifiedLLMEvaluatePapersNode:
             更新された状態の辞書
         """
         logger.info(f"🤖 Unified LLM evaluation for {len(state.ranked_papers)} papers using {self.llm_config.model.value}...")
+        logger.info(f"⚡ Parallel execution with max 10 concurrent requests")
         logger.info(f"📊 1回の呼び出しで全スコア + レビュー要約 + field_insights を取得")
         
-        evaluated_papers: list[EvaluatedPaper] = []
+        # asyncioイベントループで並列実行
+        evaluated_papers = asyncio.run(
+            self._evaluate_papers_parallel(
+                state.ranked_papers,
+                state.evaluation_criteria,
+                max_concurrent=10,
+            )
+        )
         
-        for i, paper in enumerate(state.ranked_papers, 1):
-            try:
-                logger.info(f"  [{i}/{len(state.ranked_papers)}] Evaluating: {paper.title[:50]}...")
-                
-                # 統合プロンプトを作成
-                prompt = self._create_unified_evaluation_prompt(paper, state.evaluation_criteria)
-                
-                # LLMに評価を依頼（1回の呼び出し）
-                response = self.llm.invoke(prompt)
-                response_text = response.content
-                
-                # レスポンスが空の場合の詳細ログ
-                if not response_text or len(response_text.strip()) == 0:
-                    logger.error(f"  ❌ Empty response from LLM for paper: {paper.title[:50]}")
-                    logger.error(f"     Model: {self.llm_config.model.value}")
-                    logger.error(f"     Response object: {response}")
-                    raise ValueError("Empty response from LLM")
-                
-                # レスポンスをパース
-                evaluation = self._parse_llm_response(response_text)
-                
-                # 論文オブジェクトを更新
-                updated_paper = paper.model_copy(deep=True)
-                updated_paper.relevance_score = evaluation['relevance']
-                updated_paper.novelty_score = evaluation['novelty']
-                updated_paper.impact_score = evaluation['impact']
-                updated_paper.practicality_score = evaluation['practicality']
-                updated_paper.review_summary = evaluation['review_summary']
-                updated_paper.field_insights = evaluation['field_insights']
-                updated_paper.ai_rationale = evaluation['rationale']
-                
-                # overall_scoreを計算（4つのスコアの重み付き平均）
-                updated_paper.overall_score = (
-                    evaluation['relevance'] * 0.4 +
-                    evaluation['novelty'] * 0.25 +
-                    evaluation['impact'] * 0.25 +
-                    evaluation['practicality'] * 0.10
-                )
-                
-                evaluated_papers.append(updated_paper)
-                
-                logger.debug(
-                    f"    ✓ Scores: R={evaluation['relevance']:.2f} "
-                    f"N={evaluation['novelty']:.2f} "
-                    f"I={evaluation['impact']:.2f} "
-                    f"P={evaluation['practicality']:.2f} "
-                    f"Overall={updated_paper.overall_score:.2f}"
-                )
-                
-            except Exception as e:
-                logger.warning(f"  ⚠ Failed to evaluate paper {paper.id}: {e}")
-                # 評価失敗時はデフォルト値を設定
-                updated_paper = paper.model_copy(deep=True)
-                updated_paper.relevance_score = 0.5
-                updated_paper.novelty_score = 0.5
-                updated_paper.impact_score = 0.5
-                updated_paper.practicality_score = 0.5
-                updated_paper.overall_score = 0.5
-                updated_paper.review_summary = "評価に失敗しました"
-                updated_paper.field_insights = "N/A"
-                updated_paper.ai_rationale = f"LLM評価エラー: {str(e)[:100]}"
-                evaluated_papers.append(updated_paper)
-                continue
-        
-        logger.success(f"✅ Successfully evaluated {len(evaluated_papers)} papers with unified LLM")
+        logger.success(f"✅ Successfully evaluated {len(evaluated_papers)} papers with unified LLM (parallel)")
         
         return {
             "llm_evaluated_papers": evaluated_papers,
         }
+    
+    async def _evaluate_papers_parallel(
+        self,
+        papers: list[EvaluatedPaper],
+        criteria,
+        max_concurrent: int = 10,
+    ) -> list[EvaluatedPaper]:
+        """複数論文を並列評価（レート制限付き）.
+        
+        Args:
+        ----
+            papers: 評価対象論文リスト
+            criteria: 評価基準
+            max_concurrent: 最大同時実行数（APIレート制限対策）
+            
+        Returns:
+        -------
+            評価済み論文リスト
+        """
+        # Semaphoreで同時実行数を制限
+        semaphore = asyncio.Semaphore(max_concurrent)
+        
+        async def evaluate_with_semaphore(paper, index, total):
+            async with semaphore:
+                return await self._evaluate_single_paper_async(paper, criteria, index, total)
+        
+        # 全論文を並列実行
+        tasks = [
+            evaluate_with_semaphore(paper, i + 1, len(papers))
+            for i, paper in enumerate(papers)
+        ]
+        
+        # 全タスクを実行（結果を待つ）
+        evaluated_papers = await asyncio.gather(*tasks, return_exceptions=False)
+        
+        return evaluated_papers
+    
+    async def _evaluate_single_paper_async(
+        self,
+        paper: EvaluatedPaper,
+        criteria,
+        index: int,
+        total: int,
+    ) -> EvaluatedPaper:
+        """単一論文を非同期で評価.
+        
+        Args:
+        ----
+            paper: 評価対象論文
+            criteria: 評価基準
+            index: 論文番号（ログ用）
+            total: 総論文数（ログ用）
+            
+        Returns:
+        -------
+            評価済み論文
+        """
+        try:
+            logger.info(f"  [{index}/{total}] Evaluating: {paper.title[:50]}...")
+            
+            # 統合プロンプトを作成
+            prompt = self._create_unified_evaluation_prompt(paper, criteria)
+            
+            # LLMに非同期で評価を依頼
+            response = await self.llm.ainvoke(prompt)
+            response_text = response.content
+            
+            # レスポンスが空の場合の詳細ログ
+            if not response_text or len(response_text.strip()) == 0:
+                logger.error(f"  ❌ Empty response from LLM for paper: {paper.title[:50]}")
+                logger.error(f"     Model: {self.llm_config.model.value}")
+                logger.error(f"     Response object: {response}")
+                raise ValueError("Empty response from LLM")
+            
+            # レスポンスをパース
+            evaluation = self._parse_llm_response(response_text)
+            
+            # 論文オブジェクトを更新
+            updated_paper = paper.model_copy(deep=True)
+            updated_paper.relevance_score = evaluation['relevance']
+            updated_paper.novelty_score = evaluation['novelty']
+            updated_paper.impact_score = evaluation['impact']
+            updated_paper.practicality_score = evaluation['practicality']
+            updated_paper.review_summary = evaluation['review_summary']
+            updated_paper.field_insights = evaluation['field_insights']
+            updated_paper.ai_rationale = evaluation['rationale']
+            
+            # overall_scoreを計算（4つのスコアの重み付き平均）
+            updated_paper.overall_score = (
+                evaluation['relevance'] * 0.4 +
+                evaluation['novelty'] * 0.25 +
+                evaluation['impact'] * 0.25 +
+                evaluation['practicality'] * 0.10
+            )
+            
+            logger.debug(
+                f"    ✓ [{index}/{total}] Scores: R={evaluation['relevance']:.2f} "
+                f"N={evaluation['novelty']:.2f} "
+                f"I={evaluation['impact']:.2f} "
+                f"P={evaluation['practicality']:.2f} "
+                f"Overall={updated_paper.overall_score:.2f}"
+            )
+            
+            return updated_paper
+            
+        except Exception as e:
+            logger.warning(f"  ⚠ Failed to evaluate paper {paper.id}: {e}")
+            # 評価失敗時はデフォルト値を設定
+            updated_paper = paper.model_copy(deep=True)
+            updated_paper.relevance_score = 0.5
+            updated_paper.novelty_score = 0.5
+            updated_paper.impact_score = 0.5
+            updated_paper.practicality_score = 0.5
+            updated_paper.overall_score = 0.5
+            updated_paper.review_summary = "評価に失敗しました"
+            updated_paper.field_insights = "N/A"
+            updated_paper.ai_rationale = f"LLM評価エラー: {str(e)[:100]}"
+            return updated_paper
     
     def _create_unified_evaluation_prompt(self, paper: EvaluatedPaper, criteria) -> str:
         """統合評価プロンプトを作成 - 1回の呼び出しで全て完結."""
