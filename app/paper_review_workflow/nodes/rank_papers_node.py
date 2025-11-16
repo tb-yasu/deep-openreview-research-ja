@@ -218,8 +218,19 @@ class RankPapersNode:
             for i, paper in enumerate(papers)
         ]
         
-        # 全タスクを実行
-        updated_papers = await asyncio.gather(*tasks, return_exceptions=False)
+        # 全タスクを実行（エラーが発生しても他のタスクは継続）
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # 正常に完了した論文のみを返す（Exceptionは除外）
+        updated_papers = [
+            result for result in results
+            if not isinstance(result, Exception)
+        ]
+        
+        # エラーが発生した論文数をログ
+        error_count = len(results) - len(updated_papers)
+        if error_count > 0:
+            logger.warning(f"⚠ {error_count}/{len(results)} papers failed during relevance evaluation")
         
         return updated_papers
     

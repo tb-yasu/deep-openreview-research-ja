@@ -121,8 +121,19 @@ class UnifiedLLMEvaluatePapersNode:
             for i, paper in enumerate(papers)
         ]
         
-        # 全タスクを実行（結果を待つ）
-        evaluated_papers = await asyncio.gather(*tasks, return_exceptions=False)
+        # 全タスクを実行（エラーが発生しても他のタスクは継続）
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # 正常に完了した論文のみを返す（Exceptionは除外）
+        evaluated_papers = [
+            result for result in results
+            if not isinstance(result, Exception)
+        ]
+        
+        # エラーが発生した論文数をログ
+        error_count = len(results) - len(evaluated_papers)
+        if error_count > 0:
+            logger.warning(f"⚠ {error_count}/{len(results)} papers failed during evaluation")
         
         return evaluated_papers
     
