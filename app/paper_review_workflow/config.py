@@ -25,6 +25,7 @@ class LLMConfig:
         temperature: float = 0.0,
         max_tokens: int = 1000,
         timeout: int = 60,
+        max_concurrent: int = 10,
     ):
         """LLMConfigを初期化.
         
@@ -34,11 +35,13 @@ class LLMConfig:
             temperature: サンプリング温度（0.0-1.0）
             max_tokens: 最大トークン数
             timeout: タイムアウト（秒）
+            max_concurrent: 最大同時実行数（並列処理）
         """
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
+        self.max_concurrent = max_concurrent
     
     def to_dict(self) -> dict:
         """設定を辞書に変換."""
@@ -47,6 +50,7 @@ class LLMConfig:
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "timeout": self.timeout,
+            "max_concurrent": self.max_concurrent,
         }
 
 

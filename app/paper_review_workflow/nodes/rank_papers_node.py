@@ -19,14 +19,21 @@ from app.paper_review_workflow.constants import (
     ABSTRACT_SHORT_LENGTH,
     MAX_KEYWORDS_DISPLAY,
 )
+from app.paper_review_workflow.config import LLMConfig
 
 
 class RankPapersNode:
     """評価済み論文をスコア順にランク付けするノード."""
     
-    def __init__(self) -> None:
-        """RankPapersNodeを初期化."""
+    def __init__(self, llm_config: LLMConfig | None = None) -> None:
+        """RankPapersNodeを初期化.
+        
+        Args:
+        ----
+            llm_config: LLM設定（並列数などを含む）
+        """
         self.llm = None  # 必要時に初期化（コスト削減）
+        self.llm_config = llm_config
     
     def __call__(self, state: PaperReviewAgentState) -> dict[str, Any]:
         """論文ランキングを実行.
@@ -140,8 +147,11 @@ class RankPapersNode:
             len(ranked_papers)
         )
         
+        # 並列数を決定（llm_configがあればそれを使用、なければデフォルト10）
+        max_concurrent = self.llm_config.max_concurrent if self.llm_config else 10
+        
         logger.info(f"Evaluating top {filter_count} papers with LLM for better relevance scoring...")
-        logger.info(f"⚡ Parallel execution with max 10 concurrent requests")
+        logger.info(f"⚡ Parallel execution with max {max_concurrent} concurrent requests")
         
         # LLM初期化
         if self.llm is None:
@@ -154,7 +164,7 @@ class RankPapersNode:
         # 上位N件を並列LLM評価
         target_papers = ranked_papers[:filter_count]
         updated_papers = asyncio.run(
-            self._evaluate_relevance_parallel(target_papers, criteria, max_concurrent=10)
+            self._evaluate_relevance_parallel(target_papers, criteria, max_concurrent=max_concurrent)
         )
         
         # 残りの論文（LLM評価しない）を追加

@@ -145,6 +145,12 @@ def parse_arguments() -> argparse.Namespace:
         default=1000,
         help="LLM最大トークン数（デフォルト: 1000）",
     )
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=10,
+        help="LLM評価の最大同時実行数（デフォルト: 10、APIレート制限に注意）",
+    )
     
     # 出力設定
     parser.add_argument(
@@ -207,6 +213,7 @@ def run_paper_review(args: argparse.Namespace) -> None:
             model=get_llm_model(args.model),
             temperature=args.temperature,
             max_tokens=args.max_tokens,
+            max_concurrent=args.max_concurrent,
         )
         
         # グラフを作成

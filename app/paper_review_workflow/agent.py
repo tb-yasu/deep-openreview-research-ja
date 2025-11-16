@@ -58,7 +58,7 @@ class PaperReviewAgent(LangGraphAgent):
         self.gather_interests_node = GatherResearchInterestsNode()
         self.search_papers_node = SearchPapersNode()
         self.evaluate_papers_node = EvaluatePapersNode(scoring_weights=weights)  # 初期フィルタリング
-        self.rank_papers_node = RankPapersNode()
+        self.rank_papers_node = RankPapersNode(llm_config=llm_config)
         # 統合LLM評価（1回の呼び出しで全スコア計算）
         self.unified_llm_evaluate_node = UnifiedLLMEvaluatePapersNode(
             llm_config=llm_config,

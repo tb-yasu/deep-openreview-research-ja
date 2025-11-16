@@ -72,7 +72,7 @@ class UnifiedLLMEvaluatePapersNode:
             更新された状態の辞書
         """
         logger.info(f"🤖 Unified LLM evaluation for {len(state.ranked_papers)} papers using {self.llm_config.model.value}...")
-        logger.info(f"⚡ Parallel execution with max 10 concurrent requests")
+        logger.info(f"⚡ Parallel execution with max {self.llm_config.max_concurrent} concurrent requests")
         logger.info(f"📊 1回の呼び出しで全スコア + レビュー要約 + field_insights を取得")
         
         # asyncioイベントループで並列実行
@@ -80,7 +80,7 @@ class UnifiedLLMEvaluatePapersNode:
             self._evaluate_papers_parallel(
                 state.ranked_papers,
                 state.evaluation_criteria,
-                max_concurrent=10,
+                max_concurrent=self.llm_config.max_concurrent,
             )
         )
         
