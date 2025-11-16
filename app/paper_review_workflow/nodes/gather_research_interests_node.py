@@ -99,6 +99,7 @@ Return ONLY a JSON array of keywords, like:
 ["keyword1", "keyword2", "keyword3", ...]
 
 Rules:
+- **Output keywords in ENGLISH only** (even if input is in another language)
 - Use lowercase
 - Be specific and technical
 - Include 5-8 keywords

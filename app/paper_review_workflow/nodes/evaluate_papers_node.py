@@ -233,7 +233,8 @@ Topic: "{keyword}"
 Return ONLY a JSON array of synonyms (all lowercase):
 ["synonym1", "synonym2", "synonym3", ...]
 
-Include:
+Rules:
+- **Output synonyms in ENGLISH only** (even if input topic is in another language)
 - Common abbreviations (e.g., "llm" for "large language model")
 - Related terms
 - Alternative phrasings
