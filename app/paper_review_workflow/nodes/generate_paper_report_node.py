@@ -60,16 +60,28 @@ class GeneratePaperReportNode:
         lines.append("")
         lines.append(f"- **学会**: {state.venue} {state.year}")
         lines.append(f"- **キーワード**: {state.keywords or '指定なし'}")
-        lines.append(f"- **検索論文数**: {len(state.papers)}件")
-        lines.append(f"- **評価論文数**: {len(state.evaluated_papers)}件")
+        
+        # 研究説明文を追加
+        criteria = state.evaluation_criteria
+        if criteria.research_description:
+            lines.append(f"- **研究説明**: {criteria.research_description}")
+        
+        lines.append("")
+        
+        # ヒット件数の詳細
+        lines.append("## ヒット件数")
+        lines.append("")
+        lines.append(f"- **全論文数**: {len(state.papers)}件")
+        lines.append(f"- **評価対象論文数**: {len(state.evaluated_papers)}件")
         lines.append(f"- **ランク対象論文数**: {len(state.ranked_papers)}件")
+        if state.top_papers:
+            lines.append(f"- **最終選出論文数**: {len(state.top_papers)}件")
         lines.append("")
         
         # 評価基準
-        criteria = state.evaluation_criteria
         lines.append("## 評価基準")
         lines.append("")
-        lines.append(f"- **研究興味**: {', '.join(criteria.research_interests)}")
+        lines.append(f"- **研究興味キーワード**: {', '.join(criteria.research_interests)}")
         lines.append(f"- **最小関連性スコア**: {criteria.min_relevance_score}")
         if criteria.min_rating:
             lines.append(f"- **最小レビュー評価**: {criteria.min_rating}/10")
