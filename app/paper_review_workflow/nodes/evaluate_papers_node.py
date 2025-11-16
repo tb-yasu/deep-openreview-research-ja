@@ -230,16 +230,22 @@ class EvaluatePapersNode:
 
 Topic: "{keyword}"
 
+**IMPORTANT**: For EVERY synonym you generate, include BOTH singular and plural forms.
+
 Return ONLY a JSON array of synonyms (all lowercase):
 ["synonym1", "synonym2", "synonym3", ...]
 
 Rules:
 - **Output synonyms in ENGLISH only** (even if input topic is in another language)
-- **Include both singular and plural forms** (e.g., if topic is "ai agents", include both "ai agent" and "ai agents")
+- **For each concept, provide both singular and plural**
+  Examples:
+  * Topic "ai agents" → Include: ["ai agent", "ai agents", "intelligent agent", "intelligent agents", ...]
+  * Topic "distributed system" → Include: ["distributed system", "distributed systems", "decentralized system", "decentralized systems", ...]
 - Common abbreviations (e.g., "llm" for "large language model")
-- Related terms
-- Alternative phrasings
+- Related terms and alternative phrasings
 - Keep terms concise and technical
+
+Remember: Always include both "X system" AND "X systems", "Y agent" AND "Y agents", etc.
 """
                 
                 try:
