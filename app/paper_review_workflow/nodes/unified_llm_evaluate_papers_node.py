@@ -263,7 +263,7 @@ class UnifiedLLMEvaluatePapersNode:
 以下の**4つのスコア**を0.0-1.0の範囲で評価してください：
 
 ## 1. 関連性 (relevance)
-ユーザーの研究興味との関連度を評価。
+研究テーマ「{user_interests}」との具体的な関連度を評価。
 - 論文のキーワード、タイトル、アブストラクトから判断
 - レビューに "relevance" や "significance" フィールドがあれば参考にする
 
@@ -298,6 +298,13 @@ class UnifiedLLMEvaluatePapersNode:
 例: "{paper.venue}のoverall_recommendationフィールド(平均3.0)とsummaryを主に参照しました"
 例: "{paper.venue}のratingフィールド(平均5.5)とstrengths_and_weaknessesを主に参照しました"
 
+# ⚠ 重要な指示
+
+**rationale（評価理由）** は以下の点に注意して記述してください：
+- ❌ 避けるべき表現: 「ユーザーの興味に合致」「研究興味に直接関連」などのテンプレート表現
+- ✅ 推奨: 論文固有の**具体的な技術的特徴**と**革新点**を記述
+- 例: 「Transformer の attention 機構に新しい正則化手法を導入し、長距離依存性の学習を改善。実験で BERT より 3% 向上を達成したが、計算コストが 2 倍に増加。」
+
 # 出力形式
 
 必ず以下のJSON形式のみを出力してください（説明文は不要）：
@@ -309,7 +316,7 @@ class UnifiedLLMEvaluatePapersNode:
   "practicality": 0.80,
   "review_summary": "レビューワーは手法の理論的堅牢性を高く評価。一方で実験の限定性を指摘。Program Chairsは新規性と実験品質のバランスから採択を推奨。",
   "field_insights": "{paper.venue}のoverall_recommendation(平均2.75)、theoretical_claims、experimental_designs_or_analysesフィールドを主に参照しました。",
-  "rationale": "この論文はグラフ生成に特化しており、ユーザーの興味に直接関連。新しい手法で実験も充実しているが、大規模データセットでの検証が限定的。"
+  "rationale": "Transformerのattention機構に新しい正則化手法を導入し、長距離依存性の学習を改善。実験でBERTより3%向上を達成したが、計算コストが2倍に増加。"
 }}
 """
         return prompt
