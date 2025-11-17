@@ -223,19 +223,17 @@ class GeneratePaperReportNode:
             
             lines.append("")
             
-            # 著者情報を表示（キーワードの前）
+            # 著者情報を表示（キーワードの前）- 全員表示
             authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
             if authors:
-                authors_display = ", ".join(authors[:3])
-                if len(authors) > 3:
-                    authors_display += f" 他{len(authors) - 3}名"
+                authors_display = ", ".join(authors)
                 lines.append(f"**著者**: {authors_display}")
                 lines.append("")
             
-            # キーワード（著者の後）
+            # キーワード（著者の後）- 全て表示
             keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
             if keywords:
-                lines.append(f"**キーワード**: {', '.join(keywords[:5])}")
+                lines.append(f"**キーワード**: {', '.join(keywords)}")
                 lines.append("")
             
             # 概要（英文の冒頭5-7文のみ表示、全文は折りたたみ）
