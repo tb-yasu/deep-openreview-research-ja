@@ -261,15 +261,14 @@ class GeneratePaperReportNode:
                 lines.append(abstract_short)
                 lines.append("")
                 
-                # 英語原文の全文を折りたたみで提供（短縮版より長い場合のみ）
-                if len(abstract) > len(abstract_short) + 10:  # 10文字以上長い場合のみ
-                    lines.append("<details>")
-                    lines.append("<summary>📄 英語原文（全文）を表示</summary>")
-                    lines.append("")
-                    lines.append(abstract)
-                    lines.append("")
-                    lines.append("</details>")
-                    lines.append("")
+                # 英語原文の全文を折りたたみで常に提供（統一性のため）
+                lines.append("<details>")
+                lines.append("<summary>📄 英語原文（全文）を表示</summary>")
+                lines.append("")
+                lines.append(abstract)
+                lines.append("")
+                lines.append("</details>")
+                lines.append("")
             
             # 評価ハイライト（AI評価 + レビュー要約を統合）
             if (ai_rationale and ai_rationale.strip()) or (review_summary and review_summary.strip()):
