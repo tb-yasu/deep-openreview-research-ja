@@ -146,6 +146,19 @@ class GeneratePaperReportNode:
             lines.append(f"### {rank}. {title}")
             lines.append("")
             
+            # 著者情報を表示 - 全員表示
+            authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
+            if authors:
+                authors_display = ", ".join(authors)
+                lines.append(f"**著者**: {authors_display}")
+                lines.append("")
+            
+            # キーワード - 全て表示
+            keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
+            if keywords:
+                lines.append(f"**キーワード**: {', '.join(keywords)}")
+                lines.append("")
+            
             # TL;DR（3行要約）を生成
             ai_rationale = paper.get('ai_rationale') if isinstance(paper, dict) else getattr(paper, 'ai_rationale', None)
             review_summary = paper.get('review_summary') if isinstance(paper, dict) else getattr(paper, 'review_summary', None)
@@ -222,19 +235,6 @@ class GeneratePaperReportNode:
                     lines.append("採択: ✅ **Accept**")
             
             lines.append("")
-            
-            # 著者情報を表示（キーワードの前）- 全員表示
-            authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
-            if authors:
-                authors_display = ", ".join(authors)
-                lines.append(f"**著者**: {authors_display}")
-                lines.append("")
-            
-            # キーワード（著者の後）- 全て表示
-            keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
-            if keywords:
-                lines.append(f"**キーワード**: {', '.join(keywords)}")
-                lines.append("")
             
             # 概要（英文の冒頭5-7文のみ表示、全文は折りたたみ）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
