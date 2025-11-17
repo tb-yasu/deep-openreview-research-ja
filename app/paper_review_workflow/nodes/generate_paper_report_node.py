@@ -106,19 +106,23 @@ class GeneratePaperReportNode:
                     lines.append("同義語なし（元のキーワードのみ使用）")
                 lines.append("")
         
-        # 統計情報
+        # 統計情報（評価対象論文全体の統計）
         if state.ranked_papers:
             scores = [p.overall_score for p in state.ranked_papers if p.overall_score]
             ratings = [p.rating_avg for p in state.ranked_papers if p.rating_avg]
             
-            lines.append("## 統計情報")
+            lines.append("## 📊 評価対象論文の統計")
+            lines.append("")
+            lines.append(f"評価対象: {len(state.ranked_papers)}件")
             lines.append("")
             if scores:
                 lines.append(f"- **平均総合スコア**: {sum(scores) / len(scores):.3f}")
                 lines.append(f"- **最高スコア**: {max(scores):.3f}")
                 lines.append(f"- **最低スコア**: {min(scores):.3f}")
             if ratings:
-                lines.append(f"- **平均レビュー評価**: {sum(ratings) / len(ratings):.2f}/10")
+                lines.append(f"- **平均OpenReview評価**: {sum(ratings) / len(ratings):.2f}")
+            lines.append("")
+            lines.append("*注: 以下に表示されるトップ論文は、上記の評価対象から選出された上位論文です。*")
             lines.append("")
         
         # トップ論文（LLM評価後はtop_papersから、なければranked_papersから）
@@ -201,9 +205,9 @@ class GeneratePaperReportNode:
             if detail_scores:
                 lines.append(" / ".join(detail_scores))
             
-            # OpenReview評価を別行に
+            # OpenReview評価を別行に（スケール統一のため /10 を削除）
             if rating_avg is not None:
-                lines.append(f"OpenReview評価: {rating_avg:.2f}/10")
+                lines.append(f"OpenReview: {rating_avg:.2f}")
             
             # 採択情報を強調
             if decision and decision != "N/A":
@@ -234,31 +238,31 @@ class GeneratePaperReportNode:
                 lines.append(f"**キーワード**: {', '.join(keywords[:5])}")
                 lines.append("")
             
-            # 概要（日本語要約 + 折りたたみ形式で英語原文を格納）
+            # 概要（英文の冒頭5-7文のみ表示、全文は折りたたみ）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
             if abstract and abstract.strip():
                 lines.append("#### 概要")
                 lines.append("")
                 
-                # 英語のabstractを日本語風に要約（最初の2-3文を抽出）
-                # 英文なので '.' で分割
+                # 英文を文単位で分割（'. ' で区切り）し、冒頭5-7文のみ表示
                 sentences = abstract.split('. ')
-                if len(sentences) >= 3:
-                    abstract_short = '. '.join(sentences[:3]) + '.'
-                elif len(sentences) >= 2:
-                    abstract_short = '. '.join(sentences[:2]) + '.'
-                else:
-                    # 1文のみの場合、または300文字以内の場合
-                    abstract_short = abstract[:300]
-                    if len(abstract) > 300:
-                        abstract_short += '...'
                 
-                # 日本語で簡潔に（注: 実際の翻訳ではなく、英文の要約）
+                # 最初の5-7文を抽出（長さに応じて調整）
+                if len(sentences) >= 7:
+                    abstract_short = '. '.join(sentences[:7]) + '.'
+                elif len(sentences) >= 5:
+                    abstract_short = '. '.join(sentences[:5]) + '.'
+                elif len(sentences) >= 3:
+                    abstract_short = '. '.join(sentences[:3]) + '.'
+                else:
+                    # 文が少ない場合はそのまま
+                    abstract_short = abstract
+                
                 lines.append(abstract_short)
                 lines.append("")
                 
-                # 英語原文を折りたたみで提供（長い場合のみ）
-                if len(abstract) > len(abstract_short):
+                # 英語原文の全文を折りたたみで提供（短縮版より長い場合のみ）
+                if len(abstract) > len(abstract_short) + 10:  # 10文字以上長い場合のみ
                     lines.append("<details>")
                     lines.append("<summary>📄 英語原文（全文）を表示</summary>")
                     lines.append("")
