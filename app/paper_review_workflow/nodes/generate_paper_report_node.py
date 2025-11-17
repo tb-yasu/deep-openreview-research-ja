@@ -142,125 +142,112 @@ class GeneratePaperReportNode:
             lines.append(f"### {rank}. {title}")
             lines.append("")
             
-            # スコア表示（統合LLM評価版）
-            lines.append("#### スコア")
-            lines.append("")
-            lines.append(f"| 項目 | スコア |")
-            lines.append(f"|------|--------|")
-            
-            # 総合スコア（4つの重み付き平均）
-            overall_score = paper.get('overall_score') if isinstance(paper, dict) else getattr(paper, 'overall_score', None)
-            if overall_score is not None:
-                lines.append(f"| **総合スコア** | **{overall_score:.3f}** |")
-            
-            # AI評価詳細スコア
-            relevance_score = paper.get('relevance_score') if isinstance(paper, dict) else getattr(paper, 'relevance_score', None)
-            if relevance_score is not None:
-                lines.append(f"| 　├ 関連性 | {relevance_score:.3f} |")
-            
-            novelty_score = paper.get('novelty_score') if isinstance(paper, dict) else getattr(paper, 'novelty_score', None)
-            if novelty_score is not None:
-                lines.append(f"| 　├ 新規性 | {novelty_score:.3f} |")
-            
-            impact_score = paper.get('impact_score') if isinstance(paper, dict) else getattr(paper, 'impact_score', None)
-            if impact_score is not None:
-                lines.append(f"| 　├ インパクト | {impact_score:.3f} |")
-            
-            practicality_score = paper.get('practicality_score') if isinstance(paper, dict) else getattr(paper, 'practicality_score', None)
-            if practicality_score is not None:
-                lines.append(f"| 　└ 実用性 | {practicality_score:.3f} |")
-            
-            # OpenReview平均評価
-            rating_avg = paper.get('rating_avg') if isinstance(paper, dict) else getattr(paper, 'rating_avg', None)
-            if rating_avg is not None:
-                lines.append(f"| OpenReview評価 | {rating_avg:.2f}/10 |")
-            lines.append("")
-            
-            # 採択判定と発表形式
+            # TL;DR（3行要約）を生成
+            ai_rationale = paper.get('ai_rationale') if isinstance(paper, dict) else getattr(paper, 'ai_rationale', None)
+            review_summary = paper.get('review_summary') if isinstance(paper, dict) else getattr(paper, 'review_summary', None)
             decision = paper.get('decision') if isinstance(paper, dict) else getattr(paper, 'decision', None)
+            
+            lines.append("#### 🎯 TL;DR")
+            lines.append("")
+            
+            # AI評価から要点を抽出（最初の100文字程度）
+            if ai_rationale and ai_rationale.strip():
+                tldr_text = ai_rationale[:150].split('。')[0] + '。'
+                lines.append(f"- **提案内容・強み**: {tldr_text}")
+            
+            # レビュー要約から評価を抽出
+            if review_summary and review_summary.strip():
+                review_tldr = review_summary[:100].split('。')[0] + '。'
+                lines.append(f"- **レビュー評価**: {review_tldr}")
+            
+            # 採択判定
             if decision and decision != "N/A":
-                lines.append(f"**採択判定**: {decision}")
-                
-                # 発表形式を抽出（NeurIPSなどの場合）
                 decision_lower = decision.lower()
                 if "oral" in decision_lower:
-                    lines.append("  - 🎤 **発表形式**: Oral Presentation（口頭発表）")
+                    lines.append(f"- **判定**: 採択（🎤 Oral発表）")
                 elif "spotlight" in decision_lower:
-                    lines.append("  - ✨ **発表形式**: Spotlight Presentation")
+                    lines.append(f"- **判定**: 採択（✨ Spotlight）")
                 elif "poster" in decision_lower:
-                    lines.append("  - 📊 **発表形式**: Poster Presentation")
+                    lines.append(f"- **判定**: 採択（📊 Poster）")
+                elif "accept" in decision_lower:
+                    lines.append(f"- **判定**: 採択")
+                else:
+                    lines.append(f"- **判定**: {decision}")
+            
+            lines.append("")
+            
+            # スコアを1行で表示（簡潔化）
+            overall_score = paper.get('overall_score') if isinstance(paper, dict) else getattr(paper, 'overall_score', None)
+            relevance_score = paper.get('relevance_score') if isinstance(paper, dict) else getattr(paper, 'relevance_score', None)
+            novelty_score = paper.get('novelty_score') if isinstance(paper, dict) else getattr(paper, 'novelty_score', None)
+            impact_score = paper.get('impact_score') if isinstance(paper, dict) else getattr(paper, 'impact_score', None)
+            practicality_score = paper.get('practicality_score') if isinstance(paper, dict) else getattr(paper, 'practicality_score', None)
+            rating_avg = paper.get('rating_avg') if isinstance(paper, dict) else getattr(paper, 'rating_avg', None)
+            
+            score_parts = []
+            if overall_score is not None:
+                score_parts.append(f"**総合: {overall_score:.3f}**")
+            if relevance_score is not None:
+                score_parts.append(f"関連性: {relevance_score:.2f}")
+            if novelty_score is not None:
+                score_parts.append(f"新規性: {novelty_score:.2f}")
+            if impact_score is not None:
+                score_parts.append(f"インパクト: {impact_score:.2f}")
+            if practicality_score is not None:
+                score_parts.append(f"実用性: {practicality_score:.2f}")
+            if rating_avg is not None:
+                score_parts.append(f"OpenReview: {rating_avg:.2f}/10")
+            
+            if score_parts:
+                lines.append("**スコア**: " + " | ".join(score_parts))
                 lines.append("")
             
-            # 著者
+            # 著者とキーワード（簡潔に）
             authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
-            if authors:
-                authors_display = ", ".join(authors[:5])
-                if len(authors) > 5:
-                    authors_display += f" 他{len(authors) - 5}名"
-                lines.append(f"**著者**: {authors_display}")
-                lines.append("")
-            
-            # キーワード
             keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
+            
+            info_parts = []
+            if authors:
+                authors_display = ", ".join(authors[:3])
+                if len(authors) > 3:
+                    authors_display += f" 他{len(authors) - 3}名"
+                info_parts.append(f"**著者**: {authors_display}")
             if keywords:
-                lines.append(f"**キーワード**: {', '.join(keywords[:8])}")
+                info_parts.append(f"**キーワード**: {', '.join(keywords[:5])}")
+            
+            if info_parts:
+                lines.append(" | ".join(info_parts))
                 lines.append("")
             
-            # アブストラクト（全文表示、セクションとして独立）
+            # 概要（短縮版 - 最初の300文字程度）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
             if abstract and abstract.strip():
                 lines.append("#### 概要")
                 lines.append("")
-                lines.append(abstract)
+                # 最初の300文字または最初の3文を表示
+                abstract_short = abstract[:300]
+                sentences = abstract_short.split('。')
+                if len(sentences) > 3:
+                    abstract_short = '。'.join(sentences[:3]) + '。...'
+                elif len(abstract) > 300:
+                    abstract_short += '...'
+                lines.append(abstract_short)
                 lines.append("")
             
-            # AI評価（統合LLM評価）
-            ai_rationale = paper.get('ai_rationale') if isinstance(paper, dict) else getattr(paper, 'ai_rationale', None)
-            if ai_rationale and ai_rationale.strip():
-                lines.append("#### 🤖 AI評価")
+            # 評価ハイライト（AI評価 + レビュー要約を統合）
+            if (ai_rationale and ai_rationale.strip()) or (review_summary and review_summary.strip()):
+                lines.append("#### 📊 評価ハイライト")
                 lines.append("")
-                lines.append(ai_rationale)
-                lines.append("")
-            
-            # レビュー要約
-            review_summary = paper.get('review_summary') if isinstance(paper, dict) else getattr(paper, 'review_summary', None)
-            if review_summary and review_summary.strip():
-                lines.append("#### 📊 レビュー要約")
-                lines.append("")
-                lines.append(review_summary)
-                lines.append("")
-            
-            # フィールド活用の説明
-            field_insights = paper.get('field_insights') if isinstance(paper, dict) else getattr(paper, 'field_insights', None)
-            if field_insights and field_insights.strip():
-                lines.append("#### 🔍 評価データソース")
-                lines.append("")
-                lines.append(field_insights)
-                lines.append("")
-            
-            # Meta Review（エリアチェアのまとめ）
-            meta_review = paper.get('meta_review') if isinstance(paper, dict) else getattr(paper, 'meta_review', None)
-            if meta_review and meta_review.strip():
-                lines.append("#### 📋 Meta Review（エリアチェアのまとめ）")
-                lines.append("")
-                # 長い場合は制限（最初の800文字程度）
-                if len(meta_review) > 800:
-                    lines.append(meta_review[:800] + "...")
-                else:
-                    lines.append(meta_review)
-                lines.append("")
-            
-            # Decision の詳細コメント
-            decision_comment = paper.get('decision_comment') if isinstance(paper, dict) else getattr(paper, 'decision_comment', None)
-            if decision_comment and decision_comment.strip():
-                lines.append("#### 📝 採択理由")
-                lines.append("")
-                # 長い場合は制限
-                if len(decision_comment) > 600:
-                    lines.append(decision_comment[:600] + "...")
-                else:
-                    lines.append(decision_comment)
-                lines.append("")
+                
+                if ai_rationale and ai_rationale.strip():
+                    lines.append("**AI分析**:")
+                    lines.append(ai_rationale)
+                    lines.append("")
+                
+                if review_summary and review_summary.strip():
+                    lines.append("**レビュー要約**:")
+                    lines.append(review_summary)
+                    lines.append("")
             
             # レビューの詳細（Strengths/Weaknesses）- コメントアウト（ユーザー要望により非表示）
             # reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
@@ -301,92 +288,10 @@ class GeneratePaperReportNode:
             #         lines.append(f"*他 {len(reviews) - 3} 件のレビューは省略*")
             #         lines.append("")
             
-            # レビュースコアの平均値を表示
-            reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
-            if reviews and len(reviews) > 0:
-                lines.append("#### 📊 レビュースコアの平均")
-                lines.append("")
-                
-                # 数値フィールドを収集
-                score_fields = {}
-                for review in reviews:
-                    for key, value in review.items():
-                        # 数値または数値に変換可能なフィールドのみ
-                        if key in ['summary', 'strengths', 'weaknesses', 'detailed_comments', 
-                                  'main_review', 'review_text', 'comments', 'strengths_and_weaknesses']:
-                            continue  # テキストフィールドはスキップ
-                        
-                        try:
-                            # 数値に変換してみる
-                            if isinstance(value, (int, float)):
-                                numeric_value = float(value)
-                            elif isinstance(value, str) and value.strip():
-                                # "3.5/5" のような形式を処理
-                                if '/' in value:
-                                    numeric_value = float(value.split('/')[0].strip())
-                                else:
-                                    numeric_value = float(value)
-                            else:
-                                continue
-                            
-                            if key not in score_fields:
-                                score_fields[key] = []
-                            score_fields[key].append(numeric_value)
-                        except (ValueError, TypeError):
-                            continue
-                
-                # 平均値を計算して表示
-                if score_fields:
-                    lines.append("| 項目 | 平均値 | レビュー数 |")
-                    lines.append("|------|--------|-----------|")
-                    
-                    # rating と confidence を最初に表示
-                    priority_fields = ['rating', 'overall_recommendation', 'confidence']
-                    for field in priority_fields:
-                        if field in score_fields:
-                            avg_value = sum(score_fields[field]) / len(score_fields[field])
-                            count = len(score_fields[field])
-                            field_name = self._translate_field_name(field)
-                            lines.append(f"| {field_name} | {avg_value:.2f} | {count} |")
-                    
-                    # その他のフィールドをアルファベット順に表示
-                    other_fields = sorted([f for f in score_fields.keys() if f not in priority_fields])
-                    for field in other_fields:
-                        avg_value = sum(score_fields[field]) / len(score_fields[field])
-                        count = len(score_fields[field])
-                        field_name = self._translate_field_name(field)
-                        lines.append(f"| {field_name} | {avg_value:.2f} | {count} |")
-                    
-                    lines.append("")
-                    lines.append(f"*{len(reviews)}件のレビューから集計*")
-                    lines.append("")
-            
-            # Author Final Remarks
-            author_remarks = paper.get('author_remarks') if isinstance(paper, dict) else getattr(paper, 'author_remarks', None)
-            if author_remarks and author_remarks.strip():
-                lines.append("#### 💬 著者からのコメント")
-                lines.append("")
-                # 長い場合は制限
-                if len(author_remarks) > 400:
-                    lines.append(author_remarks[:400] + "...")
-                else:
-                    lines.append(author_remarks)
-                lines.append("")
-            
-            # LLM評価理由
-            llm_rationale = paper.get('llm_rationale') if isinstance(paper, dict) else getattr(paper, 'llm_rationale', None)
-            if llm_rationale:
-                lines.append("#### AI評価（内容分析）")
-                lines.append("")
-                lines.append(llm_rationale)
-                lines.append("")
-            
-            # リンク
+            # リンク（シンプルに）
             forum_url = paper.get('forum_url') if isinstance(paper, dict) else paper.forum_url
             pdf_url = paper.get('pdf_url') if isinstance(paper, dict) else paper.pdf_url
-            lines.append(f"**🔗 リンク**:")
-            lines.append(f"- [OpenReview]({forum_url})")
-            lines.append(f"- [PDF]({pdf_url})")
+            lines.append(f"🔗 [OpenReview]({forum_url}) | [PDF]({pdf_url})")
             lines.append("")
             lines.append("---")
             lines.append("")
