@@ -176,7 +176,7 @@ class GeneratePaperReportNode:
             
             lines.append("")
             
-            # スコアを1行で表示（簡潔化）
+            # スコアを視覚的に見やすく表示（複数行）
             overall_score = paper.get('overall_score') if isinstance(paper, dict) else getattr(paper, 'overall_score', None)
             relevance_score = paper.get('relevance_score') if isinstance(paper, dict) else getattr(paper, 'relevance_score', None)
             novelty_score = paper.get('novelty_score') if isinstance(paper, dict) else getattr(paper, 'novelty_score', None)
@@ -184,55 +184,72 @@ class GeneratePaperReportNode:
             practicality_score = paper.get('practicality_score') if isinstance(paper, dict) else getattr(paper, 'practicality_score', None)
             rating_avg = paper.get('rating_avg') if isinstance(paper, dict) else getattr(paper, 'rating_avg', None)
             
-            score_parts = []
             if overall_score is not None:
-                score_parts.append(f"**総合: {overall_score:.3f}**")
+                lines.append(f"**総合: {overall_score:.3f}**")
+            
+            # 詳細スコアを1行にまとめる
+            detail_scores = []
             if relevance_score is not None:
-                score_parts.append(f"関連性: {relevance_score:.2f}")
+                detail_scores.append(f"関連性: {relevance_score:.2f}")
             if novelty_score is not None:
-                score_parts.append(f"新規性: {novelty_score:.2f}")
+                detail_scores.append(f"新規性: {novelty_score:.2f}")
             if impact_score is not None:
-                score_parts.append(f"インパクト: {impact_score:.2f}")
+                detail_scores.append(f"インパクト: {impact_score:.2f}")
             if practicality_score is not None:
-                score_parts.append(f"実用性: {practicality_score:.2f}")
+                detail_scores.append(f"実用性: {practicality_score:.2f}")
+            
+            if detail_scores:
+                lines.append(" / ".join(detail_scores))
+            
+            # OpenReview評価を別行に
             if rating_avg is not None:
-                score_parts.append(f"OpenReview: {rating_avg:.2f}/10")
+                lines.append(f"OpenReview評価: {rating_avg:.2f}/10")
             
-            if score_parts:
-                lines.append("**スコア**: " + " | ".join(score_parts))
-                lines.append("")
+            # 採択情報を強調
+            if decision and decision != "N/A":
+                decision_lower = decision.lower()
+                if "oral" in decision_lower:
+                    lines.append("採択: 🎤 **Oral**")
+                elif "spotlight" in decision_lower:
+                    lines.append("採択: ✨ **Spotlight**")
+                elif "poster" in decision_lower:
+                    lines.append("採択: 📊 **Poster**")
+                elif "accept" in decision_lower:
+                    lines.append("採択: ✅ **Accept**")
             
-            # 著者とキーワード（簡潔に）
-            authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
+            lines.append("")
+            
+            # キーワードのみ表示（著者情報は削除）
             keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
-            
-            info_parts = []
-            if authors:
-                authors_display = ", ".join(authors[:3])
-                if len(authors) > 3:
-                    authors_display += f" 他{len(authors) - 3}名"
-                info_parts.append(f"**著者**: {authors_display}")
             if keywords:
-                info_parts.append(f"**キーワード**: {', '.join(keywords[:5])}")
-            
-            if info_parts:
-                lines.append(" | ".join(info_parts))
+                lines.append(f"**キーワード**: {', '.join(keywords[:5])}")
                 lines.append("")
             
-            # 概要（短縮版 - 最初の300文字程度）
+            # 概要（折りたたみ形式で英語原文を格納）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
             if abstract and abstract.strip():
                 lines.append("#### 概要")
                 lines.append("")
-                # 最初の300文字または最初の3文を表示
+                # 最初の300文字または最初の3文を日本語風に要約表示
                 abstract_short = abstract[:300]
                 sentences = abstract_short.split('。')
                 if len(sentences) > 3:
-                    abstract_short = '。'.join(sentences[:3]) + '。...'
+                    abstract_short = '。'.join(sentences[:3]) + '。'
                 elif len(abstract) > 300:
                     abstract_short += '...'
+                
                 lines.append(abstract_short)
                 lines.append("")
+                
+                # 英語原文を折りたたみで提供
+                if len(abstract) > 300:
+                    lines.append("<details>")
+                    lines.append("<summary>📄 英語原文を表示</summary>")
+                    lines.append("")
+                    lines.append(abstract)
+                    lines.append("")
+                    lines.append("</details>")
+                    lines.append("")
             
             # 評価ハイライト（AI評価 + レビュー要約を統合）
             if (ai_rationale and ai_rationale.strip()) or (review_summary and review_summary.strip()):
