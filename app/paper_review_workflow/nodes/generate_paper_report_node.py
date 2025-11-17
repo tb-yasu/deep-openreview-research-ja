@@ -219,32 +219,48 @@ class GeneratePaperReportNode:
             
             lines.append("")
             
-            # キーワードのみ表示（著者情報は削除）
+            # 著者情報を表示（キーワードの前）
+            authors = paper.get('authors') if isinstance(paper, dict) else paper.authors
+            if authors:
+                authors_display = ", ".join(authors[:3])
+                if len(authors) > 3:
+                    authors_display += f" 他{len(authors) - 3}名"
+                lines.append(f"**著者**: {authors_display}")
+                lines.append("")
+            
+            # キーワード（著者の後）
             keywords = paper.get('keywords') if isinstance(paper, dict) else paper.keywords
             if keywords:
                 lines.append(f"**キーワード**: {', '.join(keywords[:5])}")
                 lines.append("")
             
-            # 概要（折りたたみ形式で英語原文を格納）
+            # 概要（日本語要約 + 折りたたみ形式で英語原文を格納）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
             if abstract and abstract.strip():
                 lines.append("#### 概要")
                 lines.append("")
-                # 最初の300文字または最初の3文を日本語風に要約表示
-                abstract_short = abstract[:300]
-                sentences = abstract_short.split('。')
-                if len(sentences) > 3:
-                    abstract_short = '。'.join(sentences[:3]) + '。'
-                elif len(abstract) > 300:
-                    abstract_short += '...'
                 
+                # 英語のabstractを日本語風に要約（最初の2-3文を抽出）
+                # 英文なので '.' で分割
+                sentences = abstract.split('. ')
+                if len(sentences) >= 3:
+                    abstract_short = '. '.join(sentences[:3]) + '.'
+                elif len(sentences) >= 2:
+                    abstract_short = '. '.join(sentences[:2]) + '.'
+                else:
+                    # 1文のみの場合、または300文字以内の場合
+                    abstract_short = abstract[:300]
+                    if len(abstract) > 300:
+                        abstract_short += '...'
+                
+                # 日本語で簡潔に（注: 実際の翻訳ではなく、英文の要約）
                 lines.append(abstract_short)
                 lines.append("")
                 
-                # 英語原文を折りたたみで提供
-                if len(abstract) > 300:
+                # 英語原文を折りたたみで提供（長い場合のみ）
+                if len(abstract) > len(abstract_short):
                     lines.append("<details>")
-                    lines.append("<summary>📄 英語原文を表示</summary>")
+                    lines.append("<summary>📄 英語原文（全文）を表示</summary>")
                     lines.append("")
                     lines.append(abstract)
                     lines.append("")
