@@ -159,37 +159,39 @@ class GeneratePaperReportNode:
                 lines.append(f"**キーワード**: {', '.join(keywords)}")
                 lines.append("")
             
-            # TL;DR（3行要約）を生成
+            # 評価サマリー（AI分析とレビュー要約の全文）
             ai_rationale = paper.get('ai_rationale') if isinstance(paper, dict) else getattr(paper, 'ai_rationale', None)
             review_summary = paper.get('review_summary') if isinstance(paper, dict) else getattr(paper, 'review_summary', None)
             decision = paper.get('decision') if isinstance(paper, dict) else getattr(paper, 'decision', None)
             
-            lines.append("#### 🎯 TL;DR")
+            lines.append("#### 📊 評価サマリー")
             lines.append("")
             
-            # AI評価から要点を抽出（最初の100文字程度）
+            # AI分析（全文）
             if ai_rationale and ai_rationale.strip():
-                tldr_text = ai_rationale[:150].split('。')[0] + '。'
-                lines.append(f"- **提案内容・強み**: {tldr_text}")
+                lines.append("**AI分析**:")
+                lines.append(ai_rationale)
+                lines.append("")
             
-            # レビュー要約から評価を抽出
+            # レビュー要約（全文）
             if review_summary and review_summary.strip():
-                review_tldr = review_summary[:100].split('。')[0] + '。'
-                lines.append(f"- **レビュー評価**: {review_tldr}")
+                lines.append("**レビュー要約**:")
+                lines.append(review_summary)
+                lines.append("")
             
             # 採択判定
             if decision and decision != "N/A":
                 decision_lower = decision.lower()
                 if "oral" in decision_lower:
-                    lines.append(f"- **判定**: 採択（🎤 Oral発表）")
+                    lines.append("**判定**: 採択（🎤 Oral発表）")
                 elif "spotlight" in decision_lower:
-                    lines.append(f"- **判定**: 採択（✨ Spotlight）")
+                    lines.append("**判定**: 採択（✨ Spotlight）")
                 elif "poster" in decision_lower:
-                    lines.append(f"- **判定**: 採択（📊 Poster）")
+                    lines.append("**判定**: 採択（📊 Poster）")
                 elif "accept" in decision_lower:
-                    lines.append(f"- **判定**: 採択")
+                    lines.append("**判定**: 採択")
                 else:
-                    lines.append(f"- **判定**: {decision}")
+                    lines.append(f"**判定**: {decision}")
             
             lines.append("")
             
@@ -224,30 +226,11 @@ class GeneratePaperReportNode:
             
             lines.append("")
             
-            # 概要（英文の冒頭5-7文のみ表示、全文は折りたたみ）
+            # 概要（全文のみ、折りたたみで表示）
             abstract = paper.get('abstract') if isinstance(paper, dict) else getattr(paper, 'abstract', '')
             if abstract and abstract.strip():
                 lines.append("#### 概要")
                 lines.append("")
-                
-                # 英文を文単位で分割（'. ' で区切り）し、冒頭5-7文のみ表示
-                sentences = abstract.split('. ')
-                
-                # 最初の5-7文を抽出（長さに応じて調整）
-                if len(sentences) >= 7:
-                    abstract_short = '. '.join(sentences[:7]) + '.'
-                elif len(sentences) >= 5:
-                    abstract_short = '. '.join(sentences[:5]) + '.'
-                elif len(sentences) >= 3:
-                    abstract_short = '. '.join(sentences[:3]) + '.'
-                else:
-                    # 文が少ない場合はそのまま
-                    abstract_short = abstract
-                
-                lines.append(abstract_short)
-                lines.append("")
-                
-                # 英語原文の全文を折りたたみで常に提供（統一性のため）
                 lines.append("<details>")
                 lines.append("<summary>📄 英語原文（全文）を表示</summary>")
                 lines.append("")
@@ -255,21 +238,6 @@ class GeneratePaperReportNode:
                 lines.append("")
                 lines.append("</details>")
                 lines.append("")
-            
-            # 評価ハイライト（AI評価 + レビュー要約を統合）
-            if (ai_rationale and ai_rationale.strip()) or (review_summary and review_summary.strip()):
-                lines.append("#### 📊 評価ハイライト")
-                lines.append("")
-                
-                if ai_rationale and ai_rationale.strip():
-                    lines.append("**AI分析**:")
-                    lines.append(ai_rationale)
-                    lines.append("")
-                
-                if review_summary and review_summary.strip():
-                    lines.append("**レビュー要約**:")
-                    lines.append(review_summary)
-                    lines.append("")
             
             # レビューの詳細（Strengths/Weaknesses）- コメントアウト（ユーザー要望により非表示）
             # reviews = paper.get('reviews') if isinstance(paper, dict) else getattr(paper, 'reviews', [])
