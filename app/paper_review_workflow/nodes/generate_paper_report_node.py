@@ -222,18 +222,6 @@ class GeneratePaperReportNode:
             if rating_avg is not None:
                 lines.append(f"OpenReview: {rating_avg:.2f}")
             
-            # 採択情報を強調
-            if decision and decision != "N/A":
-                decision_lower = decision.lower()
-                if "oral" in decision_lower:
-                    lines.append("採択: 🎤 **Oral**")
-                elif "spotlight" in decision_lower:
-                    lines.append("採択: ✨ **Spotlight**")
-                elif "poster" in decision_lower:
-                    lines.append("採択: 📊 **Poster**")
-                elif "accept" in decision_lower:
-                    lines.append("採択: ✅ **Accept**")
-            
             lines.append("")
             
             # 概要（英文の冒頭5-7文のみ表示、全文は折りたたみ）

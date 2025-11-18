@@ -164,7 +164,7 @@ def parse_arguments() -> argparse.Namespace:
         "--output-file",
         type=str,
         default=None,
-        help="出力ファイル名（デフォルト: paper_review_report_{venue}_{year}.md）",
+        help="出力ファイル名（デフォルト: paper_review_report_{venue}_{year}_{timestamp}.md）",
     )
     parser.add_argument(
         "--top-n-display",
@@ -439,18 +439,11 @@ def run_paper_review(args: argparse.Namespace) -> None:
             output_dir.mkdir(parents=True, exist_ok=True)
             
             if args.output_file:
-                base_output_file = output_dir / args.output_file
+                output_file = output_dir / args.output_file
             else:
-                base_output_file = output_dir / f"paper_review_report_{args.venue}_{args.year}.md"
-            
-            # ファイルが既に存在する場合、タイムスタンプを付けて別名で保存
-            output_file = base_output_file
-            if output_file.exists():
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                stem = base_output_file.stem
-                suffix = base_output_file.suffix
-                output_file = output_dir / f"{stem}_{timestamp}{suffix}"
-                logger.info(f"📁 ファイルが既に存在するため、別名で保存します: {output_file.name}")
+                # 常にタイムスタンプ付きのファイル名を生成
+                timestamp = datetime.now().strftime("%m%d_%H%M%S")
+                output_file = output_dir / f"paper_review_report_{args.venue}_{args.year}_{timestamp}.md"
             
             output_file.write_text(paper_report, encoding="utf-8")
             
