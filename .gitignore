@@ -87,3 +87,7 @@ ruff.toml
 paper/
 docs/
 
+# Test directory (development only)
+tests/
+test_local/
+
