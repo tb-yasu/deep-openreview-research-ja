@@ -219,7 +219,7 @@ def run_paper_review(args: argparse.Namespace) -> None:
         
         # グラフを作成
         logger.info("🔧 ワークフローを初期化中...")
-        graph = create_graph(llm_config=llm_config)
+        graph = create_graph(llm_config=llm_config, top_n=args.top_k)
         
         # 研究興味を取得
         if args.research_description:

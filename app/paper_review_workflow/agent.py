@@ -42,6 +42,7 @@ class PaperReviewAgent(LangGraphAgent):
         recursion_limit: int = 100,
         llm_config: LLMConfig | None = None,
         scoring_weights: ScoringWeights | None = None,
+        top_n: int | None = None,
     ) -> None:
         """PaperReviewAgentを初期化.
         
@@ -52,6 +53,7 @@ class PaperReviewAgent(LangGraphAgent):
             recursion_limit: 再帰の最大回数
             llm_config: LLM評価の設定（省略時はデフォルト）
             scoring_weights: スコアリング重み設定（省略時はデフォルト）
+            top_n: 最終レポートに含める論文数（省略時はtop_kと同じ）
         """
         weights = scoring_weights or DEFAULT_SCORING_WEIGHTS
         
@@ -64,7 +66,7 @@ class PaperReviewAgent(LangGraphAgent):
             llm_config=llm_config,
             scoring_weights=weights,
         )
-        self.re_rank_papers_node = ReRankPapersNode()
+        self.re_rank_papers_node = ReRankPapersNode(top_n=top_n) if top_n else ReRankPapersNode()
         self.generate_report_node = GeneratePaperReportNode()
         
         super().__init__(
@@ -114,6 +116,7 @@ class PaperReviewAgent(LangGraphAgent):
 def create_graph(
     llm_config: LLMConfig | None = None,
     scoring_weights: ScoringWeights | None = None,
+    top_n: int | None = None,
 ) -> CompiledStateGraph:
     """PaperReviewAgentのグラフを作成.
     
@@ -121,6 +124,7 @@ def create_graph(
     ----
         llm_config: LLM評価の設定（省略時はデフォルト）
         scoring_weights: スコアリング重み設定（省略時はデフォルト）
+        top_n: 最終レポートに含める論文数（省略時はtop_kと同じ）
     
     Returns:
     -------
@@ -133,6 +137,7 @@ def create_graph(
         recursion_limit=100,
         llm_config=llm_config,
         scoring_weights=scoring_weights,
+        top_n=top_n,
     )
     return agent.graph
 
