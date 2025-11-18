@@ -66,7 +66,8 @@ class PaperReviewAgent(LangGraphAgent):
             llm_config=llm_config,
             scoring_weights=weights,
         )
-        self.re_rank_papers_node = ReRankPapersNode(top_n=top_n) if top_n else ReRankPapersNode()
+        # top_nを常に渡す（Noneの場合はデフォルト値が使われる）
+        self.re_rank_papers_node = ReRankPapersNode(top_n=top_n if top_n is not None else 9999)
         self.generate_report_node = GeneratePaperReportNode()
         
         super().__init__(

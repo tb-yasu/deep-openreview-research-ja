@@ -36,6 +36,7 @@ class ReRankPapersNode:
             更新された状態の辞書
         """
         logger.info(f"Re-ranking {len(state.llm_evaluated_papers)} papers based on LLM scores...")
+        logger.info(f"Top N papers to select: {self.top_n}")
         
         # overall_scoreでソート（降順） - 統合LLM評価システムではoverall_scoreを使用
         re_ranked_papers = sorted(

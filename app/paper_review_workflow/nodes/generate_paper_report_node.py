@@ -132,7 +132,7 @@ class GeneratePaperReportNode:
         # top_papersがあればそれを使用（LLM評価済み）、なければranked_papersを使用
         papers_to_display = state.top_papers if state.top_papers else state.ranked_papers[:10]
         
-        for i, paper_data in enumerate(papers_to_display[:20], 1):  # 上位20件
+        for i, paper_data in enumerate(papers_to_display, 1):  # すべての論文を出力
             # paper_dataが辞書の場合とEvaluatedPaperオブジェクトの場合を処理
             if isinstance(paper_data, dict):
                 paper = paper_data
