@@ -251,7 +251,7 @@ python run_deep_research.py \
   --research-description "強化学習とその応用に興味があります。" \
   --top-k 50 \
   --min-relevance-score 0.3 \
-  --model gpt-4o
+  --model gpt-4o-mini
 ```
 
 ### 例3: キーワードベースのみ（高速）
