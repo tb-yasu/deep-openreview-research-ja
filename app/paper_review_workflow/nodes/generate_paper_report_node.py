@@ -61,6 +61,15 @@ class GeneratePaperReportNode:
         lines.append(f"- **学会**: {state.venue} {state.year}")
         lines.append(f"- **キーワード**: {state.keywords or '指定なし'}")
         
+        # 検索方法を追加
+        if state.use_hybrid_search:
+            search_method = "ハイブリッド検索（ベクトル検索 + キーワード検索）"
+            if state.hybrid_vector_weight != 1.0 or state.hybrid_keyword_weight != 1.0:
+                search_method += f"（ベクトル重み: {state.hybrid_vector_weight}, キーワード重み: {state.hybrid_keyword_weight}）"
+        else:
+            search_method = "キーワード検索（標準）"
+        lines.append(f"- **検索方法**: {search_method}")
+        
         # 研究説明文を追加
         criteria = state.evaluation_criteria
         if criteria.research_description:

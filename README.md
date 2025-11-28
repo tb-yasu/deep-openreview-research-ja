@@ -295,7 +295,7 @@ python run_deep_research.py \
   --year 2025 \
   --research-description "分子構造の生成モデル" \
   --hybrid-search \
-  --vector-weight 1.5
+  --vector-weight 1.0
 
 # キーワード検索を重視（専門用語の正確なマッチングを優先）
 python run_deep_research.py \
@@ -303,7 +303,7 @@ python run_deep_research.py \
   --year 2025 \
   --research-description "graph neural network drug discovery" \
   --hybrid-search \
-  --keyword-weight 1.5
+  --keyword-weight 1.0
 ```
 
 ## 🏗️ アーキテクチャ
