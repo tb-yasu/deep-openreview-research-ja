@@ -102,8 +102,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--min-relevance-score",
         type=float,
-        default=0.2,
-        help="最小関連性スコア（0.0-1.0、デフォルト: 0.2）",
+        default=0.1,
+        help="最小関連性スコア（0.0-1.0、デフォルト: 0.1）",
     )
     parser.add_argument(
         "--top-k",

@@ -374,13 +374,17 @@ class UnifiedLLMEvaluatePapersNode:
     def _parse_llm_response(self, response: str) -> dict:
         """LLMのレスポンスをパースして評価結果を抽出."""
         try:
-            # JSONブロックを抽出
-            json_match = re.search(r'```json\s*(\{.*?\})\s*```', response, re.DOTALL)
+            # JSONブロックを抽出 - ネストされたJSONのため貪欲マッチを使用
+            json_match = re.search(r'```json\s*(\{.*\})\s*```', response, re.DOTALL)
             if json_match:
                 json_str = json_match.group(1)
             else:
-                # JSONブロックがない場合、全体から{}を探す
-                json_match = re.search(r'\{.*?\}', response, re.DOTALL)
+                # JSONブロックがない場合、最大の{}ブロックを探す
+                # ネストされた括弧を捕捉するため貪欲マッチを使用
+                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response, re.DOTALL)
+                if not json_match:
+                    # フォールバック: 単純な貪欲マッチを試行
+                    json_match = re.search(r'\{.*\}', response, re.DOTALL)
                 if json_match:
                     json_str = json_match.group(0)
                 else:
