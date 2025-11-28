@@ -482,7 +482,3 @@ LLM評価を並列実行することで、大幅な処理時間の短縮を実�
 ## 📞 サポート
 
 問題が発生した場合や質問がある場合は、[GitHub Issues](https://github.com/tb-yasu/openreview-agent-ja/issues)でお問い合わせください。
-
----
-
-**Happy Paper Reviewing! 📚✨**
