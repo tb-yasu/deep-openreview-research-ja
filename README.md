@@ -1,13 +1,13 @@
 # Deep OpenReview Research (日本語版)
 
-AIを活用した深い論文レビュー・分析エージェント
+AIを活用した深い論文サーベイ・分析エージェント
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 
 ## 📋 概要
 
-**Deep OpenReview Research** は、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、Meta Review、レビュー詳細、採択理由など、論文の深い情報を抽出し、効率的な論文調査を支援します。
+**Deep OpenReview Research** は、学会の採択論文を自動的に検索・評価し、ユーザーの研究興味に基づいて有益な論文をランク付けするAIエージェントです。OpenReview APIとLLMを組み合わせて、Meta Review、査読詳細、採択理由など、論文の深い情報を抽出し、効率的な論文調査を支援します。
 
 > **⚠️ 注意事項**：本ツールは開発段階であり、論文評価の精度に関する定量的な検証は今後の課題です。スコアリングなどは議論の余地があり、AIによる評価結果は参考情報として活用し、重要な研究判断は人間が最終確認することを推奨します。
 
@@ -22,7 +22,7 @@ AIを活用した深い論文レビュー・分析エージェント
 - 💬 **自然言語入力**: 研究興味を自然な文章で記述可能
 - 📝 **詳細レポート**: Markdown形式の詳細レポートを自動生成
 - 🎤 **発表形式表示**: Oral/Spotlight/Posterの区別を自動抽出
-- 📋 **深いレビュー分析**: レビュー要約、スコア平均、採択理由、著者コメントを表示
+- 📋 **深い査読分析**: 査読要約、スコア平均、採択理由、著者コメントを表示
 - 🔄 **動的フィールド検出**: ICLR/NeurIPS/ICML等、各会議の評価項目に自動対応
 
 ## 🚀 クイックスタート
@@ -44,7 +44,7 @@ cp .env.example .env
 # 4. 論文データを取得（初回のみ、60-90分）
 python fetch_all_papers.py --venue NeurIPS --year 2025
 
-# 5. 論文レビューを実行
+# 5. 論文サーベイを実行
 python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
@@ -315,7 +315,7 @@ deep-openreview-research-ja/
 ├── indexer.py               # ベクトルインデックス構築 🆕
 ├── search_engine.py         # ハイブリッド検索エンジン 🆕
 ├── app/
-│   ├── paper_review_workflow/  # 論文レビューワークフロー
+│   ├── paper_review_workflow/  # 論文サーベイワークフロー
 │   │   ├── agent.py            # メインエージェント
 │   │   ├── config.py           # 設定
 │   │   ├── constants.py        # 定数
@@ -351,12 +351,12 @@ deep-openreview-research-ja/
    - 新規性スコア（novelty）
    - インパクトスコア（impact）
    - 実用性スコア（practicality）
-   - レビュー要約（review_summary）
+   - 査読要約（review_summary）
    - 評価データソース（field_insights）
    - AI評価理由（ai_rationale）
    - **処理時間**: 100論文を約30秒で評価（従来比10倍高速）
 7. **再ランキング**: LLM評価スコアで最終ランク付け
-8. **レポート生成**: 詳細レポートを生成（レビュースコア平均も含む）
+8. **レポート生成**: 詳細レポートを生成（査読スコア平均も含む）
 
 ### ハイブリッド検索の仕組み 🆕
 
@@ -390,10 +390,10 @@ storage/outputs/paper_review_report_NeurIPS_2025.md
   - スコア詳細（関連性、新規性、インパクト、実用性）
   - 採択判定と発表形式（Oral/Spotlight/Poster）
   - **🤖 AI評価** - 統合LLM評価による詳細な分析
-  - **📊 レビュー要約** - 全レビューワーの評価を統合した要約
-  - **🔍 評価データソース** - 使用したレビューフィールドの説明
+  - **📊 査読要約** - 全査読者の評価を統合した要約
+  - **🔍 評価データソース** - 使用した査読フィールドの説明
   - **📝 採択理由（Decision Comment）** - Program Chairsによる採択判定コメント
-  - **📊 レビュースコアの平均** - 各評価項目の平均値（会議により異なる）
+  - **📊 査読スコアの平均** - 各評価項目の平均値（会議により異なる）
   - **💬 著者からのコメント（Author Remarks）**
   - リンク（OpenReview、PDF）
 
@@ -442,7 +442,7 @@ python fetch_all_papers.py --venue NeurIPS --year 2025
 python run_deep_research.py ... --top-k 30
 ```
 
-### AI評価やレビュー要約が表示されない
+### AI評価や査読要約が表示されない
 
 古いキャッシュを使用している場合、動的フィールド検出機能が含まれていない可能性があります。論文データを再取得してください：
 
@@ -452,9 +452,9 @@ python fetch_all_papers.py --venue NeurIPS --year 2025 --force
 
 **注意**: 再取得には60-90分程度かかります。
 
-### ICMLでレビュースコアが1つしか表示されない
+### ICMLで査読スコアが1つしか表示されない
 
-これは正常な動作です。ICML 2025のレビューシステムは数値スコアが`overall_recommendation`のみで、他の評価項目（実験設計、手法など）はテキスト記述形式です。これらのテキスト評価は「📊 レビュー要約」セクションで統合LLMによって要約されています。
+これは正常な動作です。ICML 2025の査読システムは数値スコアが`overall_recommendation`のみで、他の評価項目（実験設計、手法など）はテキスト記述形式です。これらのテキスト評価は「📊 査読要約」セクションで統合LLMによって要約されています。
 
 ### 実行が遅い
 
