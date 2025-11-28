@@ -14,6 +14,7 @@ AIを活用した深い論文レビュー・分析エージェント
 ## ✨ 主な機能
 
 - 🔍 **自動論文検索**: 指定された学会・年の論文を自動検索
+- 🔎 **ハイブリッド検索** 🆕: ベクトル検索（意味的類似性）とキーワード検索を組み合わせた高精度な検索
 - 🤖 **統合LLM評価**: 1回の呼び出しで関連性・新規性・インパクト・実用性を総合評価
 - ⚡ **並列処理**: 最大10件同時にLLM評価を実行し、処理速度を約10倍高速化
 - 📊 **スコアリング**: OpenReviewの評価とAI評価を組み合わせた総合スコア
@@ -48,6 +49,15 @@ python run_deep_research.py \
   --venue NeurIPS \
   --year 2025 \
   --research-description "グラフ生成と創薬への応用に興味があります"
+
+# 6. (オプション) ハイブリッド検索で高精度な検索 🆕
+#    ベクトル検索を併用して意味的に類似した論文も発見
+python indexer.py --venue NeurIPS --year 2025  # インデックス構築（初回のみ、約5分）
+python run_deep_research.py \
+  --venue NeurIPS \
+  --year 2025 \
+  --research-description "グラフ生成と創薬への応用に興味があります" \
+  --hybrid-search
 ```
 
 ## 📦 インストール
@@ -88,6 +98,7 @@ pip install -r requirements.txt
 主な依存パッケージ:
 - `langchain` / `langgraph` - LLMアプリケーションフレームワーク
 - `langchain-openai` - OpenAI統合
+- `langchain-chroma` - ベクトルDB（ハイブリッド検索用）
 - `openreview-py` - OpenReview API クライアント
 - `pydantic` - データ検証
 - `loguru` - ログ出力
@@ -152,10 +163,20 @@ python run_deep_research.py \
   --research-interests "graph generation,drug discovery,molecular design"
 ```
 
-### パターン3: クイックスタートスクリプト
+### パターン3: ハイブリッド検索を使用（推奨） 🆕
+
+ベクトル検索とキーワード検索を組み合わせた高精度な検索が可能です。
 
 ```bash
-./quickstart.sh
+# 1. ベクトルインデックスを構築（初回のみ、約5分、~$0.03）
+python indexer.py --venue NeurIPS --year 2025
+
+# 2. ハイブリッド検索で実行
+python run_deep_research.py \
+  --venue NeurIPS \
+  --year 2025 \
+  --research-description "グラフ生成と創薬への応用" \
+  --hybrid-search
 ```
 
 ## 🎛️ コマンドラインオプション
@@ -177,6 +198,14 @@ python run_deep_research.py \
 | `--max-papers` | 15000 | 検索する最大論文数 |
 | `--focus-on-novelty` | True | 新規性を重視 |
 | `--focus-on-impact` | True | インパクトを重視 |
+
+### ハイブリッド検索のオプション 🆕
+
+| オプション | デフォルト | 説明 |
+|-----------|-----------|------|
+| `--hybrid-search` | False | ハイブリッド検索を有効化（要事前インデックス構築） |
+| `--vector-weight` | 1.0 | ベクトル検索（意味的類似性）の重み（1.0-2.0推奨） |
+| `--keyword-weight` | 1.0 | キーワード検索（語彙マッチング）の重み（1.0-2.0推奨） |
 
 ### LLM設定のオプション
 
@@ -257,13 +286,34 @@ python run_deep_research.py \
   --output-file transformers_review.md
 ```
 
+### 例6: ハイブリッド検索（高精度検索） 🆕
+
+```bash
+# ベクトル検索を重視（抽象的な概念の類似性を優先）
+python run_deep_research.py \
+  --venue NeurIPS \
+  --year 2025 \
+  --research-description "分子構造の生成モデル" \
+  --hybrid-search \
+  --vector-weight 1.5
+
+# キーワード検索を重視（専門用語の正確なマッチングを優先）
+python run_deep_research.py \
+  --venue NeurIPS \
+  --year 2025 \
+  --research-description "graph neural network drug discovery" \
+  --hybrid-search \
+  --keyword-weight 1.5
+```
+
 ## 🏗️ アーキテクチャ
 
 ```
 deep-openreview-research-ja/
 ├── fetch_all_papers.py      # 論文データ取得スクリプト
 ├── run_deep_research.py     # メイン実行スクリプト
-├── quickstart.sh            # クイックスタートスクリプト
+├── indexer.py               # ベクトルインデックス構築 🆕
+├── search_engine.py         # ハイブリッド検索エンジン 🆕
 ├── app/
 │   ├── paper_review_workflow/  # 論文レビューワークフロー
 │   │   ├── agent.py            # メインエージェント
@@ -271,6 +321,7 @@ deep-openreview-research-ja/
 │   │   ├── constants.py        # 定数
 │   │   ├── models/             # データモデル
 │   │   ├── nodes/              # ワークフローノード
+│   │   │   ├── search_papers_node.py            # 論文検索（ハイブリッド対応）
 │   │   │   ├── unified_llm_evaluate_papers_node.py  # 統合LLM評価
 │   │   │   ├── generate_paper_report_node.py        # レポート生成
 │   │   │   └── ...
@@ -282,7 +333,8 @@ deep-openreview-research-ja/
 └── storage/
     ├── cache/                  # キャッシュデータ
     ├── outputs/                # 出力レポート
-    └── papers_data/            # 論文データ
+    ├── papers_data/            # 論文データ
+    └── vector_db/              # ベクトルインデックス 🆕
 ```
 
 ## 🔄 ワークフロー
@@ -290,6 +342,8 @@ deep-openreview-research-ja/
 1. **キーワード収集**: 自然言語から研究キーワードを抽出（または直接指定）
 2. **同義語生成**: 各キーワードの同義語をLLMで生成
 3. **論文検索**: 指定された学会・年の論文を検索
+   - **標準検索**: キーワードマッチングによる検索
+   - **ハイブリッド検索** 🆕: ベクトル検索 + キーワード検索（RRFで統合）
 4. **初期評価**: キーワードマッチングで関連性スコアを計算
 5. **ランキング**: スコアに基づいて上位k件を選択
 6. **統合LLM評価**（⚡並列処理）: 最大10件同時に実行し、1回の呼び出しで以下を総合評価
@@ -303,6 +357,20 @@ deep-openreview-research-ja/
    - **処理時間**: 100論文を約30秒で評価（従来比10倍高速）
 7. **再ランキング**: LLM評価スコアで最終ランク付け
 8. **レポート生成**: 詳細レポートを生成（レビュースコア平均も含む）
+
+### ハイブリッド検索の仕組み 🆕
+
+ハイブリッド検索は、2種類の検索を組み合わせて高精度な結果を提供します：
+
+```
+研究クエリ ──┬── ベクトル検索（意味的類似性）──┐
+             │                                    │
+             └── キーワード検索（語彙マッチング）──┴── RRF統合 ── 結果
+```
+
+- **ベクトル検索**: OpenAI Embeddings (`text-embedding-3-small`) を使用して意味的に類似した論文を検索
+- **キーワード検索**: タイトル・アブストラクト・キーワードでの語彙マッチング
+- **RRF（Reciprocal Rank Fusion）**: 両方の検索結果を統合し、両方で高順位の論文を優先
 
 ## 📝 出力
 
@@ -403,6 +471,26 @@ python run_deep_research.py ... --top-k 50
 python run_deep_research.py ... --model gpt-4o-mini
 ```
 
+### ハイブリッド検索で「Vector index not found」と表示される 🆕
+
+ベクトルインデックスを構築してください：
+
+```bash
+python indexer.py --venue NeurIPS --year 2025
+```
+
+インデックス構築には以下が必要です：
+- 約5分の時間（5,000論文の場合）
+- OpenAI APIコスト: ~$0.03（text-embedding-3-small）
+
+### ハイブリッド検索が標準検索にフォールバックする 🆕
+
+以下の場合、自動的に標準検索にフォールバックします：
+- インデックスが存在しない場合
+- 検索クエリ（`--research-description`）が指定されていない場合
+
+ログに「Falling back to standard search」と表示されます。
+
 ## ⚡ パフォーマンスと最適化
 
 ### 並列処理による高速化
@@ -430,11 +518,22 @@ LLM評価を並列実行することで、大幅な処理時間の短縮を実�
 2. **top-kを絞る**: 評価する論文数を適切に制限（デフォルト: 30件）
 3. **キャッシュを活用**: 同じ学会・年・キーワードでの再実行はキャッシュを利用
 
+### ハイブリッド検索のコスト 🆕
+
+| 項目 | コスト | 備考 |
+|------|--------|------|
+| インデックス構築（初回） | ~$0.03 | 5,000論文、text-embedding-3-small |
+| 検索クエリ | ~$0.0001/回 | ほぼ無視できるコスト |
+| 増分更新 | ~$0.006/1,000論文 | 新規論文のみ |
+
+**メリット**: 一度構築すれば何度でも高精度検索が可能
+
 ## 🛠️ 技術スタック
 
 - **Python**: 3.12+
 - **フレームワーク**: LangGraph, LangChain
 - **LLMプロバイダー**: OpenAI
+- **ベクトルDB**: ChromaDB（ハイブリッド検索用）
 - **API**: OpenReview API
 - **データ検証**: Pydantic
 - **コード品質**: Ruff, MyPy

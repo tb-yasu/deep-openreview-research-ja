@@ -209,6 +209,23 @@ class PaperReviewAgentInputState(BaseModel):
         title="評価基準",
         description="論文を評価する基準",
     )
+    
+    # ハイブリッド検索オプション
+    use_hybrid_search: bool = Field(
+        default=False,
+        title="ハイブリッド検索を使用",
+        description="ベクトル検索とキーワード検索を組み合わせたハイブリッド検索を使用する",
+    )
+    hybrid_vector_weight: float = Field(
+        default=1.0,
+        title="ベクトル検索の重み",
+        description="RRFでのベクトル検索の重み（1.0-2.0推奨）",
+    )
+    hybrid_keyword_weight: float = Field(
+        default=1.0,
+        title="キーワード検索の重み",
+        description="RRFでのキーワード検索の重み（1.0-2.0推奨）",
+    )
 
 
 class PaperReviewAgentPrivateState(BaseModel):

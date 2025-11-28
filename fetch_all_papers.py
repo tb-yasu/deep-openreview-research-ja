@@ -326,7 +326,7 @@ def fetch_paper_reviews_dynamic(
         }
 
 
-def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
+def fetch_all_papers(venue: str, year: int, force: bool = False) -> list[dict[str, Any]] | None:
     """Fetch all papers from a conference with review data and save to disk.
     
     Args:
@@ -365,7 +365,10 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
         logger.info("")
         logger.info("✓ Use this cache by running the agent with any keywords")
         logger.info("✓ To re-download, use --force flag")
-        return
+        
+        # Load and return cached papers for optional vector indexing
+        papers = json.loads(papers_file.read_text(encoding="utf-8"))
+        return papers
     
     # Display header
     logger.info("=" * 80)
@@ -598,6 +601,9 @@ def fetch_all_papers(venue: str, year: int, force: bool = False) -> None:
     logger.info("")
     logger.success("🎉 You can now run the agent with any keywords for instant filtering!")
     logger.success("🎉 All review data is cached locally - no more API rate limits!")
+    
+    # Return papers for optional vector indexing
+    return papers
 
 
 def main() -> None:
@@ -639,11 +645,46 @@ Note:
         action="store_true",
         help="Force re-download even if cache exists"
     )
+    parser.add_argument(
+        "--build-index",
+        action="store_true",
+        help="Build vector index for hybrid search after fetching"
+    )
+    parser.add_argument(
+        "--rebuild-index",
+        action="store_true",
+        help="Rebuild vector index from scratch (deletes existing)"
+    )
     
     args = parser.parse_args()
     
     try:
-        fetch_all_papers(args.venue, args.year, args.force)
+        papers = fetch_all_papers(args.venue, args.year, args.force)
+        
+        # Optional: Build vector index for hybrid search
+        if papers and (args.build_index or args.rebuild_index):
+            logger.info("")
+            logger.info("=" * 80)
+            logger.info("STEP 4: Building Vector Index for Hybrid Search")
+            logger.info("=" * 80)
+            
+            try:
+                from indexer import build_vector_index
+                build_vector_index(
+                    papers=papers,
+                    venue=args.venue,
+                    year=args.year,
+                    rebuild=args.rebuild_index,
+                )
+            except ImportError:
+                logger.error("❌ indexer.py not found. Please ensure it exists.")
+                logger.info("💡 You can build the index manually with:")
+                logger.info(f"   python indexer.py --venue {args.venue} --year {args.year}")
+            except Exception as e:
+                logger.error(f"❌ Failed to build vector index: {e}")
+                logger.info("💡 You can try building the index manually later with:")
+                logger.info(f"   python indexer.py --venue {args.venue} --year {args.year}")
+                
     except KeyboardInterrupt:
         logger.warning("\nInterrupted by user. Progress has been saved.")
         logger.info("Run the script again to resume from the last checkpoint.")

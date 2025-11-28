@@ -54,10 +54,20 @@ def parse_arguments() -> argparse.Namespace:
   python run_paper_review.py --venue NeurIPS --year 2025 \\
     --research-interests "graph generation,drug discovery,molecular design"
 
+  # ハイブリッド検索を使用（要事前インデックス構築）
+  python indexer.py --venue NeurIPS --year 2025  # 事前にインデックスを構築
+  python run_paper_review.py --venue NeurIPS --year 2025 \\
+    --research-description "グラフ生成と創薬への応用" --hybrid-search
+
+  # ハイブリッド検索でベクトル検索を重視
+  python run_paper_review.py --venue NeurIPS --year 2025 \\
+    --research-description "グラフ生成と創薬への応用" \\
+    --hybrid-search --vector-weight 1.5
+
   # 詳細設定
   python run_paper_review.py --venue NeurIPS --year 2025 \\
     --research-description "グラフ生成と創薬への応用に興味があります" \\
-    --top-k 50 --min-relevance-score 0.3 --model gpt-5-nano
+    --top-k 50 --min-relevance-score 0.3 --model gpt-4o-mini
         """,
     )
     
@@ -124,6 +134,26 @@ def parse_arguments() -> argparse.Namespace:
         action="store_true",
         default=True,
         help="インパクトを重視（デフォルト: True）",
+    )
+    
+    # ハイブリッド検索オプション
+    parser.add_argument(
+        "--hybrid-search",
+        action="store_true",
+        default=False,
+        help="ハイブリッド検索を使用（ベクトル+キーワード、要事前インデックス構築）",
+    )
+    parser.add_argument(
+        "--vector-weight",
+        type=float,
+        default=1.0,
+        help="ハイブリッド検索でのベクトル検索の重み（デフォルト: 1.0）",
+    )
+    parser.add_argument(
+        "--keyword-weight",
+        type=float,
+        default=1.0,
+        help="ハイブリッド検索でのキーワード検索の重み（デフォルト: 1.0）",
     )
     
     # LLM設定f
@@ -246,6 +276,10 @@ def run_paper_review(args: argparse.Namespace) -> None:
                 focus_on_novelty=args.focus_on_novelty,
                 focus_on_impact=args.focus_on_impact,
             ),
+            # ハイブリッド検索オプション
+            use_hybrid_search=args.hybrid_search,
+            hybrid_vector_weight=args.vector_weight,
+            hybrid_keyword_weight=args.keyword_weight,
         )
         
         # 実行条件を表示
@@ -259,6 +293,11 @@ def run_paper_review(args: argparse.Namespace) -> None:
         logger.info(f"   最小関連性スコア: {args.min_relevance_score}")
         logger.info(f"   最大論文数: {args.max_papers}")
         logger.info(f"   検索対象: {'全論文（採択・不採択含む）' if args.include_rejected else '採択論文のみ'}")
+        if args.hybrid_search:
+            logger.info(f"   🔍 検索方式: ハイブリッド検索（ベクトル+キーワード）")
+            logger.info(f"      ベクトル重み: {args.vector_weight}, キーワード重み: {args.keyword_weight}")
+        else:
+            logger.info(f"   検索方式: 標準検索（キーワードマッチング）")
         if not args.no_llm_eval:
             logger.info(f"   LLM評価対象: 上位{args.top_k}件")
         else:
