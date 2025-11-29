@@ -25,6 +25,9 @@ from app.paper_review_workflow.nodes import (
 from app.paper_review_workflow.nodes.unified_llm_evaluate_papers_node import (
     UnifiedLLMEvaluatePapersNode,
 )
+from app.paper_review_workflow.nodes.fetch_reviews_node import (
+    FetchReviewsNode,
+)
 from app.paper_review_workflow.config import LLMConfig, ScoringWeights, DEFAULT_SCORING_WEIGHTS
 
 
@@ -61,6 +64,8 @@ class PaperReviewAgent(LangGraphAgent):
         self.search_papers_node = SearchPapersNode()
         self.evaluate_papers_node = EvaluatePapersNode(scoring_weights=weights)  # 初期フィルタリング
         self.rank_papers_node = RankPapersNode(llm_config=llm_config)
+        # ランキング済み論文のレビューをオンデマンドで取得
+        self.fetch_reviews_node = FetchReviewsNode()
         # 統合LLM評価（1回の呼び出しで全スコア計算）
         self.unified_llm_evaluate_node = UnifiedLLMEvaluatePapersNode(
             llm_config=llm_config,
@@ -94,6 +99,8 @@ class PaperReviewAgent(LangGraphAgent):
         workflow.add_node("search_papers", self.search_papers_node)
         workflow.add_node("evaluate_papers", self.evaluate_papers_node)  # 初期フィルタリング
         workflow.add_node("rank_papers", self.rank_papers_node)
+        # ランキング済み論文のレビューをオンデマンドで取得
+        workflow.add_node("fetch_reviews", self.fetch_reviews_node)
         # 統合LLM評価（1回で全スコア計算）
         workflow.add_node("unified_llm_evaluate", self.unified_llm_evaluate_node)
         workflow.add_node("re_rank_papers", self.re_rank_papers_node)
@@ -103,7 +110,8 @@ class PaperReviewAgent(LangGraphAgent):
         workflow.add_edge("gather_interests", "search_papers")
         workflow.add_edge("search_papers", "evaluate_papers")
         workflow.add_edge("evaluate_papers", "rank_papers")
-        workflow.add_edge("rank_papers", "unified_llm_evaluate")  # 統合LLM評価
+        workflow.add_edge("rank_papers", "fetch_reviews")  # レビューをオンデマンドで取得
+        workflow.add_edge("fetch_reviews", "unified_llm_evaluate")  # その後LLM評価
         workflow.add_edge("unified_llm_evaluate", "re_rank_papers")
         workflow.add_edge("re_rank_papers", "generate_report")
         

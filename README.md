@@ -41,7 +41,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # .env ファイルを編集して実際のAPIキーを設定してください
 
-# 4. 論文データを取得（初回のみ、60-90分）
+# 4. 論文データを取得（初回のみ）
 python fetch_all_papers.py --venue NeurIPS --year 2025
 
 # 5. 論文サーベイを実行
@@ -138,10 +138,17 @@ $env:OPENAI_API_KEY="your-api-key-here"
 #### 5. 論文データの取得
 
 ```bash
+```bash
+# 高速モード（デフォルト）: 基本情報のみ（5-10分）
 python fetch_all_papers.py --venue NeurIPS --year 2025
+
+# フルモード: 全レビューデータ付き（60-90分）
+python fetch_all_papers.py --venue NeurIPS --year 2025 --with-reviews
 ```
 
-**注意**: 初回実行時は60-90分程度かかりますが、一度取得すればローカルキャッシュを使用します。
+**注意**: 
+- 高速モード（デフォルト）は基本的な論文情報のみを数秒で取得します。レビューはエージェント実行時にオンデマンドで取得されます。
+- フルモード（`--with-reviews`）は60-90分かかりますが、全レビューデータを事前取得します。エージェント実行は早くなります。
 
 ## 💻 基本的な使い方
 
@@ -310,10 +317,11 @@ python run_deep_research.py \
 
 ```
 deep-openreview-research-ja/
-├── fetch_all_papers.py      # 論文データ取得スクリプト
+├── fetch_all_papers.py      # 論文データ取得スクリプト（基本情報）
 ├── run_deep_research.py     # メイン実行スクリプト
-├── indexer.py               # ベクトルインデックス構築 🆕
-├── search_engine.py         # ハイブリッド検索エンジン 🆕
+├── review_cache.py          # レビューのオンデマンド取得とキャッシュ 🆕
+├── indexer.py               # ベクトルインデックス構築
+├── search_engine.py         # ハイブリッド検索エンジン
 ├── app/
 │   ├── paper_review_workflow/  # 論文サーベイワークフロー
 │   │   ├── agent.py            # メインエージェント
@@ -450,7 +458,7 @@ python run_deep_research.py ... --top-k 30
 python fetch_all_papers.py --venue NeurIPS --year 2025 --force
 ```
 
-**注意**: 再取得には60-90分程度かかります。
+**注意**: 再取得には5-10分程度（`--with-reviews`の場合は60-90分）かかります。
 
 ### ICMLで査読スコアが1つしか表示されない
 

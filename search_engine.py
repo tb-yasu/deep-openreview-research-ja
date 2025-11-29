@@ -206,10 +206,10 @@ def keyword_search(
     scored_papers: list[tuple[str, float]] = []
     
     for paper in all_papers:
-        # Filter by acceptance status
+        # Filter by acceptance status (exclude Reject and N/A)
         if accepted_only:
             decision = paper.get("decision", "").lower()
-            if "accept" not in decision:
+            if "reject" in decision or not decision or decision == "n/a":
                 continue
         
         paper_id = paper.get("id")

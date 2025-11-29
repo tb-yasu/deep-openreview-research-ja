@@ -78,11 +78,21 @@ class EvaluatePapersNode:
                         "confidence_avg": paper.confidence_avg,
                         "decision": paper.decision,
                     }
+                elif paper.reviews is not None:
+                    # 高速モード：レビューなしで評価（キーワードベースの関連性スコアのみ）
+                    logger.debug(f"Fast mode: evaluating {paper.id} without review data")
+                    metadata = {
+                        "reviews": paper.reviews or [],
+                        "rating_avg": paper.rating_avg,
+                        "confidence_avg": paper.confidence_avg,
+                        "decision": paper.decision or "N/A",
+                    }
                 else:
-                    # APIから取得
-                    logger.debug(f"Fetching review data from API for {paper.id}")
+                    # レガシー：APIから取得（paper.reviewsがNoneの場合のみ）
+                    logger.info(f"Fetching metadata for paper: {paper.id}")
                     result = self.tool.invoke({"paper_id": paper.id})
                     metadata = json.loads(result)
+                    logger.info(f"Fetched metadata for paper: {paper.title}")
                     
                     # エラーチェック
                     if isinstance(metadata, dict) and "error" in metadata:

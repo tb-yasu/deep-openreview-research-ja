@@ -32,7 +32,10 @@ def is_accepted(paper: dict[str, Any]) -> bool:
         bool: 採択されている場合True、それ以外False
     """
     decision = paper.get("decision", "").lower()
-    return "accept" in decision
+    # Reject と N/A 以外は採択とみなす
+    if not decision or decision == "n/a":
+        return False
+    return "reject" not in decision
 
 
 @tool

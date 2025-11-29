@@ -7,6 +7,7 @@ from app.paper_review_workflow.nodes.rank_papers_node import RankPapersNode
 from app.paper_review_workflow.nodes.llm_evaluate_papers_node import LLMEvaluatePapersNode
 from app.paper_review_workflow.nodes.re_rank_papers_node import ReRankPapersNode
 from app.paper_review_workflow.nodes.generate_paper_report_node import GeneratePaperReportNode
+from app.paper_review_workflow.nodes.fetch_reviews_node import FetchReviewsNode
 
 __all__ = [
     "GatherResearchInterestsNode",
@@ -16,5 +17,6 @@ __all__ = [
     "LLMEvaluatePapersNode",
     "ReRankPapersNode",
     "GeneratePaperReportNode",
+    "FetchReviewsNode",
 ]
 
